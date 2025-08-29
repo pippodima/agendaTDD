@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
@@ -98,8 +101,27 @@ public class ToDoMongoRepositoryTest {
             .contains(new ToDo("task2", true));
     }
 
+    
+    @Test
+    void testSave() {
+        ToDo todo = new ToDo("task1", false);
+        todoRepository.save(todo);
 
-    // helper
+        assertThat(readAllToDosFromDatabase())
+            .containsExactly(todo);
+    }
+
+    @Test
+    void testDelete() {
+        addTestToDoToDatabase("task1", false);
+        todoRepository.deleteByTitle("task1");
+
+        assertThat(readAllToDosFromDatabase())
+            .isEmpty();
+    }
+    
+
+    // helpers
     private void addTestToDoToDatabase(String title, boolean done) {
         todoCollection.insertOne(
             new Document()
@@ -107,6 +129,13 @@ public class ToDoMongoRepositoryTest {
                 .append("done", done)
         );
     }
+    
+    private List<ToDo> readAllToDosFromDatabase() {
+        return StreamSupport.stream(todoCollection.find().spliterator(), false)
+                .map(d -> new ToDo(d.getString("title"), d.getBoolean("done", false)))
+                .collect(Collectors.toList());
+    }
+
 
 
 }
