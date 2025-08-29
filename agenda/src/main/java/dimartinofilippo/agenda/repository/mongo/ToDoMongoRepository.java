@@ -1,7 +1,11 @@
 package dimartinofilippo.agenda.repository.mongo;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.bson.Document;
 
@@ -40,8 +44,7 @@ public class ToDoMongoRepository implements ToDoRepository{
 
 	@Override
 	public List<ToDo> findAll() {
-		// TODO Auto-generated method stub
-		return null;
+		return Collections.emptyList();
 	}
 
 	@Override

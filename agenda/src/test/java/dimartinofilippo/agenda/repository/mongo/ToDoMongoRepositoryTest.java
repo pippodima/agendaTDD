@@ -1,6 +1,7 @@
 package dimartinofilippo.agenda.repository.mongo;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.InetSocketAddress;
 
@@ -51,10 +52,14 @@ public class ToDoMongoRepositoryTest {
         String uri = "mongodb://" + serverAddress.getHostName() + ":" + serverAddress.getPort();
         client = MongoClients.create(uri);
 
-        todoRepository = new ToDoMongoRepository(client);
         MongoDatabase database = client.getDatabase(ToDoMongoRepository.AGENDA_DB_NAME);
         database.drop();
+        
+        todoRepository = new ToDoMongoRepository(client);
         todoCollection = database.getCollection(ToDoMongoRepository.TODO_COLLECTION_NAME);
+        
+        assertThat(todoCollection.countDocuments()).isZero();
+
     }
     
     @AfterEach
@@ -64,7 +69,7 @@ public class ToDoMongoRepositoryTest {
     
     @Test
     public void testFindAllWhenDBIsEmpty() {
-    	assertThat(todoRepository.findAll().isEmpty());
+    	assertTrue(todoRepository.findAll().isEmpty());
     
     }
 
