@@ -17,6 +17,8 @@
     
     <mockito.version>5.7.0</mockito.version>
     <mongo.version>5.1.0</mongo.version>
+    <mongo.java.version>3.12.14</mongo.java.version>
+    <mongo.java.server.version>1.11.0</mongo.java.server.version>
   </properties>
 
   <dependencyManagement>
@@ -59,6 +61,20 @@
   	<groupId>org.mongodb</groupId>
   	<artifactId>mongodb-driver-sync</artifactId>
   	<version>${mongo.version}</version>
+  </dependency>
+  
+  <dependency>
+    <groupId>org.mongodb</groupId>
+    <artifactId>mongo-java-driver</artifactId>
+    <version>${mongo.java.version}</version>
+  </dependency>
+
+  <!-- In-memory MongoDB for testing -->
+  <dependency>
+    <groupId>de.bwaldvogel</groupId>
+    <artifactId>mongo-java-server</artifactId>
+    <version>${mongo.java.server.version}</version>
+    <scope>test</scope>
   </dependency>
  
 
