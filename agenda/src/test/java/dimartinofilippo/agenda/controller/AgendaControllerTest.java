@@ -80,7 +80,7 @@ public class AgendaControllerTest {
 		ToDo todoToDelete = new ToDo(TEST_STRING, TEST_VALUE);
 		
 		when(todoRepository.findByTitle(TEST_STRING)).thenReturn(Optional.of(todoToDelete));
-		agendaController.deleteToDoByTitle(TEST_STRING);
+		agendaController.deleteToDo(todoToDelete);
 		
 		InOrder inOrder = Mockito.inOrder(todoRepository, todoView);
 		inOrder.verify(todoRepository).deleteByTitle(TEST_STRING);
