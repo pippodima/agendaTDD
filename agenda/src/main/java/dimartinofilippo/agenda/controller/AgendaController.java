@@ -36,9 +36,16 @@ public class AgendaController {
 		
 	}
 
-	public void deleteToDoByTitle(String title) {
-		// TODO Auto-generated method stub
+	public void deleteToDo(ToDo todo) {
+		Optional<ToDo> existingTodo = todoRepository.findByTitle(todo.getTitle());
+
+		if(existingTodo.isEmpty()) {
+			todoView.showError("ToDo doesn't exist" + todo.getTitle());
+			return;
+		}
 		
+		todoRepository.deleteByTitle(todo.getTitle());
+		todoView.removedToDo(todo);
 	}
 
 }
