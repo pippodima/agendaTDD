@@ -24,8 +24,8 @@ import dimartinofilippo.agenda.view.ToDoView;
 
 public class AgendaControllerTest {
 	
-    private static final String TEST_STRING = "test";
-    private static final boolean TEST_VALUE = false;
+    private static final String TODO_TITLE = "test";
+    private static final boolean TODO_DONE = false;
 
 	
 	@Mock
@@ -53,8 +53,8 @@ public class AgendaControllerTest {
 	
 	@Test
 	public void testAddToDoWhenDoesNotExist() {
-		ToDo todo = new ToDo(TEST_STRING, TEST_VALUE);
-		when(todoRepository.findByTitle(TEST_STRING)).thenReturn(Optional.empty());
+		ToDo todo = new ToDo(TODO_TITLE, TODO_DONE);
+		when(todoRepository.findByTitle(TODO_TITLE)).thenReturn(Optional.empty());
 		agendaController.addToDo(todo);
 		
 		InOrder inOrder = Mockito.inOrder(todoRepository, todoView);
@@ -65,25 +65,25 @@ public class AgendaControllerTest {
 	
 	@Test
 	public void testAddToDoWhenAlreadyExist() {
-		ToDo todoToAdd = new ToDo(TEST_STRING, TEST_VALUE);
-		ToDo existingToDo = new ToDo(TEST_STRING, !TEST_VALUE);
+		ToDo todoToAdd = new ToDo(TODO_TITLE, TODO_DONE);
+		ToDo existingToDo = new ToDo(TODO_TITLE, !TODO_DONE);
 		
-		when(todoRepository.findByTitle(TEST_STRING)).thenReturn(Optional.of(existingToDo));
+		when(todoRepository.findByTitle(TODO_TITLE)).thenReturn(Optional.of(existingToDo));
 		agendaController.addToDo(todoToAdd);
-		verify(todoView).showError("same ToDo already in the agenda" + existingToDo.getTitle());
+		verify(todoView).showError("same ToDo already in the agenda: " + existingToDo.getTitle());
 		verifyNoMoreInteractions(ignoreStubs(todoRepository));
 		
 	}
 	
 	@Test
 	public void testDeleteToDoWhenExist() {
-		ToDo todoToDelete = new ToDo(TEST_STRING, TEST_VALUE);
+		ToDo todoToDelete = new ToDo(TODO_TITLE, TODO_DONE);
 		
-		when(todoRepository.findByTitle(TEST_STRING)).thenReturn(Optional.of(todoToDelete));
+		when(todoRepository.findByTitle(TODO_TITLE)).thenReturn(Optional.of(todoToDelete));
 		agendaController.deleteToDo(todoToDelete);
 		
 		InOrder inOrder = Mockito.inOrder(todoRepository, todoView);
-		inOrder.verify(todoRepository).deleteByTitle(TEST_STRING);
+		inOrder.verify(todoRepository).deleteByTitle(TODO_TITLE);
 		inOrder.verify(todoView).removedToDo(todoToDelete);
 		
 	}
@@ -91,12 +91,12 @@ public class AgendaControllerTest {
 	
 	@Test
 	public void testDeleteToDoWhenDoesNotExist() {
-		ToDo todo = new ToDo(TEST_STRING, TEST_VALUE);
+		ToDo todo = new ToDo(TODO_TITLE, TODO_DONE);
 		
-		when(todoRepository.findByTitle(TEST_STRING)).thenReturn(Optional.empty());
+		when(todoRepository.findByTitle(TODO_TITLE)).thenReturn(Optional.empty());
 		agendaController.deleteToDo(todo);
 		
-		verify(todoView).showError("ToDo doesn't exist" + todo.getTitle());
+		verify(todoView).showError("ToDo doesn't exist: " + todo.getTitle());
 		verifyNoMoreInteractions(ignoreStubs(todoRepository));
 
 		
