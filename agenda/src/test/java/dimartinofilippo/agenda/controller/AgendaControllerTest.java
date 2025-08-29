@@ -87,5 +87,19 @@ public class AgendaControllerTest {
 		inOrder.verify(todoView).removedToDo(todoToDelete);
 		
 	}
+	
+	
+	@Test
+	public void testDeleteToDoWhenDoesNotExist() {
+		ToDo todo = new ToDo(TEST_STRING, TEST_VALUE);
+		
+		when(todoRepository.findByTitle(TEST_STRING)).thenReturn(Optional.empty());
+		agendaController.deleteToDo(todo);
+		
+		verify(todoView).showError("ToDo doesn't exist" + todo.getTitle());
+		verifyNoMoreInteractions(ignoreStubs(todoRepository));
+
+		
+	}
 
 }
