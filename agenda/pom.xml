@@ -16,8 +16,7 @@
     <maven.compiler.release>17</maven.compiler.release>
     
     <mockito.version>5.7.0</mockito.version>
-    <mongo.version>5.1.0</mongo.version>
-    <mongo.java.version>3.12.14</mongo.java.version>
+    <mongo.version>3.12.14</mongo.version>
     <mongo.java.server.version>1.11.0</mongo.java.server.version>
     <assertj.version>3.24.2</assertj.version>
   </properties>
@@ -57,17 +56,11 @@
   	<scope>test</scope>
   </dependency>
   
-  <!-- MongoDB Java Driver -->
-  <dependency>
-  	<groupId>org.mongodb</groupId>
-  	<artifactId>mongodb-driver-sync</artifactId>
-  	<version>${mongo.version}</version>
-  </dependency>
-  
+  <!-- MongoDB Java Driver -->  
   <dependency>
     <groupId>org.mongodb</groupId>
     <artifactId>mongo-java-driver</artifactId>
-    <version>${mongo.java.version}</version>
+    <version>${mongo.version}</version>
   </dependency>
 
   <!-- In-memory MongoDB for testing -->
