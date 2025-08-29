@@ -16,6 +16,7 @@
     <maven.compiler.release>17</maven.compiler.release>
     
     <mockito.version>5.7.0</mockito.version>
+    <mongo.version>5.1.0</mongo.version>
   </properties>
 
   <dependencyManagement>
@@ -51,6 +52,13 @@
   	<artifactId>mockito-core</artifactId>
   	<version>${mockito.version}</version>
   	<scope>test</scope>
+  </dependency>
+  
+  <!-- MongoDB Java Driver -->
+  <dependency>
+  	<groupId>org.mongodb</groupId>
+  	<artifactId>mongodb-driver-sync</artifactId>
+  	<version>${mongo.version}</version>
   </dependency>
  
 
