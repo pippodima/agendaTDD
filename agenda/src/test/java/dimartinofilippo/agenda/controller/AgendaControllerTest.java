@@ -1,5 +1,6 @@
 package dimartinofilippo.agenda.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -36,6 +37,7 @@ public class AgendaControllerTest {
 		List<ToDo> todos = Arrays.asList(new ToDo());
 		when(todoRepository.findAll()).thenReturn(todos);
 		List<ToDo> result = agendaController.allToDos();
+		assertEquals(todos, result);
 		
 	}
 
