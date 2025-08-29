@@ -36,4 +36,9 @@ public class AgendaController {
 		
 	}
 
+	public void deleteToDoByTitle(String title) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

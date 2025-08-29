@@ -1,7 +1,9 @@
 package dimartinofilippo.agenda.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.ignoreStubs;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -50,7 +52,7 @@ public class AgendaControllerTest {
 	}
 	
 	@Test
-	public void addToDoWhenDoesNotExist() {
+	public void testAddToDoWhenDoesNotExist() {
 		ToDo todo = new ToDo(TEST_STRING, TEST_VALUE);
 		when(todoRepository.findByTitle(TEST_STRING)).thenReturn(Optional.empty());
 		agendaController.addToDo(todo);
@@ -59,6 +61,30 @@ public class AgendaControllerTest {
 		inOrder.verify(todoRepository).save(todo);
 		inOrder.verify(todoView).addedToDo(todo);
 		
+	}
+	
+	@Test
+	public void testAddToDoWhenAlreadyExist() {
+		ToDo todoToAdd = new ToDo(TEST_STRING, TEST_VALUE);
+		ToDo existingToDo = new ToDo(TEST_STRING, !TEST_VALUE);
+		
+		when(todoRepository.findByTitle(TEST_STRING)).thenReturn(Optional.of(existingToDo));
+		agendaController.addToDo(todoToAdd);
+		verify(todoView).showError("same ToDo already in the agenda" + existingToDo.getTitle());
+		verifyNoMoreInteractions(ignoreStubs(todoRepository));
+		
+	}
+	
+	@Test
+	public void testDeleteToDoWhenExist() {
+		ToDo todoToDelete = new ToDo(TEST_STRING, TEST_VALUE);
+		
+		when(todoRepository.findByTitle(TEST_STRING)).thenReturn(Optional.of(todoToDelete));
+		agendaController.deleteToDoByTitle(TEST_STRING);
+		
+		InOrder inOrder = Mockito.inOrder(todoRepository, todoView);
+		inOrder.verify(todoRepository).deleteByTitle(TEST_STRING);
+		inOrder.verify(todoView).removedToDo(todoToDelete);
 		
 	}
 
