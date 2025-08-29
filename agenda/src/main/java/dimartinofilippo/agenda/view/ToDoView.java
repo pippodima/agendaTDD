@@ -9,4 +9,5 @@ public interface ToDoView {
 	void showAllToDos(List<ToDo> todos);
 	void addedToDo(ToDo todo);
 	void removedToDo(ToDo todo);
+	void showError(String string);
 }
