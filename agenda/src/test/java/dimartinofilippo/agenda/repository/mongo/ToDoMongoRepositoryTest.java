@@ -82,6 +82,24 @@ public class ToDoMongoRepositoryTest {
     	
     }
     
+    
+    @Test
+    void testFindByTitleNotFound() {
+        assertThat(todoRepository.findByTitle("nonexistent")).isEmpty();
+    }
+
+    @Test
+    void testFindByTitleFound() {
+        addTestToDoToDatabase("task1", false);
+        addTestToDoToDatabase("task2", true);
+
+        assertThat(todoRepository.findByTitle("task2"))
+            .isPresent()
+            .contains(new ToDo("task2", true));
+    }
+
+
+    // helper
     private void addTestToDoToDatabase(String title, boolean done) {
         todoCollection.insertOne(
             new Document()
