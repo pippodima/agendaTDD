@@ -19,6 +19,7 @@
     <mongo.version>5.1.0</mongo.version>
     <mongo.java.version>3.12.14</mongo.java.version>
     <mongo.java.server.version>1.11.0</mongo.java.server.version>
+    <assertj.version>3.24.2</assertj.version>
   </properties>
 
   <dependencyManagement>
@@ -76,6 +77,15 @@
     <version>${mongo.java.server.version}</version>
     <scope>test</scope>
   </dependency>
+  
+  <!-- Assertj -->
+  <dependency>
+    <groupId>org.assertj</groupId>
+    <artifactId>assertj-core</artifactId>
+    <version>${assertj.version}</version>
+    <scope>test</scope>
+</dependency>
+
  
 
   </dependencies>
