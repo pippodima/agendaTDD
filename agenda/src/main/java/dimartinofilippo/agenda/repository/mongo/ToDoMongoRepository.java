@@ -11,6 +11,7 @@ import org.bson.Document;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
 
 import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.repository.ToDoRepository;
@@ -38,18 +39,27 @@ public class ToDoMongoRepository implements ToDoRepository{
 
 	@Override
 	public Optional<ToDo> findByTitle(String title) {
-		// TODO Auto-generated method stub
+		Document doc = todoCollection.find(Filters.eq("title", title)).first();
+		if (doc != null) {
+			return Optional.of(fromDocumentToToDo(doc));
+		}
 		return Optional.empty();
 	}
 
+	private ToDo fromDocumentToToDo(Document doc) {
+	    return new ToDo(
+	            doc.getString("title"),
+	            doc.getBoolean("done", false)
+	        );
+	}
+
+
 	@Override
 	public List<ToDo> findAll() {
-        List<ToDo> todos = new ArrayList<>();
-        for (Document doc : todoCollection.find()) {
-            todos.add(new ToDo(doc.getString("title"), doc.getBoolean("done", false)));
-        }
-        return todos;
-    }
+	    return StreamSupport.stream(todoCollection.find().spliterator(), false)
+	                        .map(this::fromDocumentToToDo)
+	                        .collect(Collectors.toList());
+	}
 
 	@Override
 	public void deleteByTitle(String title) {
