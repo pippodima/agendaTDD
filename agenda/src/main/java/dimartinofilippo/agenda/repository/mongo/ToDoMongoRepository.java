@@ -33,8 +33,11 @@ public class ToDoMongoRepository implements ToDoRepository{
 
 	@Override
 	public ToDo save(ToDo todo) {
-		// TODO Auto-generated method stub
-		return null;
+	    Document doc = new Document()
+	            .append("title", todo.getTitle())
+	            .append("done", todo.isDone());
+	        todoCollection.insertOne(doc);
+	        return todo;
 	}
 
 	@Override
@@ -63,7 +66,7 @@ public class ToDoMongoRepository implements ToDoRepository{
 
 	@Override
 	public void deleteByTitle(String title) {
-		// TODO Auto-generated method stub
+		todoCollection.deleteOne(Filters.eq("title", title));
 		
 	}
 
