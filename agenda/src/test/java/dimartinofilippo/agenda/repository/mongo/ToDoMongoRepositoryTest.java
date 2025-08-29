@@ -25,8 +25,6 @@ import dimartinofilippo.agenda.model.ToDo;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ToDoMongoRepositoryTest {
 	
-    private static final String TODO_TITLE = "test";
-    private static final boolean TODO_DONE = false;
 	
 	private static MongoServer server;
 	private static InetSocketAddress serverAddress;
@@ -69,8 +67,27 @@ public class ToDoMongoRepositoryTest {
     
     @Test
     public void testFindAllWhenDBIsEmpty() {
-    	assertTrue(todoRepository.findAll().isEmpty());
+    	assertThat(todoRepository.findAll().isEmpty());
+    }
     
+    @Test
+    public void testFindAllWhenDBIsNotEmpty() {
+    	addTestToDoToDatabase("todo1", true);
+    	addTestToDoToDatabase("todo2", false);
+    	
+    	assertThat(todoRepository.findAll()).containsExactly(
+    			new ToDo("todo1", true),
+    			new ToDo("todo2", false)
+    			);
+    	
+    }
+    
+    private void addTestToDoToDatabase(String title, boolean done) {
+        todoCollection.insertOne(
+            new Document()
+                .append("title", title)
+                .append("done", done)
+        );
     }
 
 

@@ -44,8 +44,12 @@ public class ToDoMongoRepository implements ToDoRepository{
 
 	@Override
 	public List<ToDo> findAll() {
-		return Collections.emptyList();
-	}
+        List<ToDo> todos = new ArrayList<>();
+        for (Document doc : todoCollection.find()) {
+            todos.add(new ToDo(doc.getString("title"), doc.getBoolean("done", false)));
+        }
+        return todos;
+    }
 
 	@Override
 	public void deleteByTitle(String title) {
