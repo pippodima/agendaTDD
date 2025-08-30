@@ -2,9 +2,16 @@ package dimartinofilippo.agenda.repository.sql;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
@@ -42,27 +49,34 @@ public class ToDoSQLRepositoryTest {
 	}
 
 	@Test
-	void findAllWhenEmptyReturnEmptyList() {
+	void testFindAllWhenEmptyReturnEmptyList() {
 		assertThat(sqlRepository.findAll().isEmpty());
 	}
 
 	@Test
-	void findAllWhenNotEmptyReturnsRows() throws Exception {
+	void testFindAllWhenNotEmptyReturnsRows() throws Exception {
 		insert("todo1", true);
 		insert("todo2", false);
 		assertThat(sqlRepository.findAll()).containsExactly(new ToDo("todo1", true), new ToDo("todo2", false));
 	}
-	
+
 	@Test
-	void findByTitle_notFound_returnsEmpty() {
-	assertThat(sqlRepository.findByTitle("missing")).isEmpty();
+	void testFindByTitle_notFound_returnsEmpty() {
+		assertThat(sqlRepository.findByTitle("missing")).isEmpty();
 	}
 
 	@Test
-	void findByTitle_found_returnsOptional() throws Exception {
-	insert("task1", false);
-	insert("task2", true);
-	assertThat(sqlRepository.findByTitle("task2")).isPresent().contains(new ToDo("task2", true));
+	void testFindByTitle_found_returnsOptional() throws Exception {
+		insert("task1", false);
+		insert("task2", true);
+		assertThat(sqlRepository.findByTitle("task2")).isPresent().contains(new ToDo("task2", true));
+	}
+
+	@Test
+	void testSaveInsertRow() {
+		ToDo todo = new ToDo("todo1", false);
+		sqlRepository.save(todo);
+		assertThat(selectAll().contains(todo)).isTrue();
 	}
 
 	// helpers
@@ -79,6 +93,19 @@ public class ToDoSQLRepositoryTest {
 			ps.setString(1, title);
 			ps.setBoolean(2, done);
 			ps.executeUpdate();
+		}
+	}
+
+	private List<ToDo> selectAll() {
+		try (Connection c = dataSource.getConnection();
+				PreparedStatement ps = c.prepareStatement("SELECT title, done FROM todos ORDER BY title");
+				ResultSet rs = ps.executeQuery()) {
+			List<ToDo> out = new ArrayList<>();
+			while (rs.next())
+				out.add(new ToDo(rs.getString(1), rs.getBoolean(2)));
+			return out;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
