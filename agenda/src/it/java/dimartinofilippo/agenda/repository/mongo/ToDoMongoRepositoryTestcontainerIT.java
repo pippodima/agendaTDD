@@ -14,6 +14,8 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
+import dimartinofilippo.agenda.model.ToDo;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
@@ -51,4 +53,40 @@ class ToDoMongoRepositoryTestcontainersIT {
     void testContainerConnection() {
         assertThat(todoCollection.countDocuments()).isZero();
     }
+    
+    @Test
+    void testFindAll() {
+    	addTestToDoToDatabase("todo1", true);
+    	addTestToDoToDatabase("todo2", false);
+    	
+    	assertThat(todoRepository.findAll())
+    		.containsExactly(
+    				new ToDo("todo1", true),
+    				new ToDo("todo2", false)
+    				);
+    	
+    }
+    
+    @Test
+    void testFindByTitle() {
+    	addTestToDoToDatabase("todo1", true);
+    	addTestToDoToDatabase("todo2", false);
+
+    	assertThat(todoRepository.findByTitle("todo2"))
+    		.contains(new ToDo("todo2", false));
+    }
+    
+
+    
+    // helper
+    
+    private void addTestToDoToDatabase(String title, boolean done) {
+        todoCollection.insertOne(
+                new Document()
+                        .append("title", title)
+                        .append("done", done));
+    }
+
+    
+    
 }
