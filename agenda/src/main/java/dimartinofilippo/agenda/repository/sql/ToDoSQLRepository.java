@@ -16,6 +16,11 @@ import dimartinofilippo.agenda.repository.ToDoRepository;
 public class ToDoSQLRepository implements ToDoRepository {
 
 	private static final String TABLE_NAME = "todos";
+	private static final String SELECT_ALL = "SELECT title, done FROM " + TABLE_NAME + " ORDER BY title";
+	private static final String SELECT_BY_TITLE = "SELECT title, done FROM " + TABLE_NAME + " WHERE title = ?";
+	private static final String INSERT = "INSERT INTO " + TABLE_NAME + "(title, done) VALUES(?,?)";
+	private static final String DELETE = "DELETE FROM " + TABLE_NAME + " WHERE title = ?";
+
 	private DataSource dataSource;
 
 	public ToDoSQLRepository(DataSource dataSource) {
@@ -24,27 +29,23 @@ public class ToDoSQLRepository implements ToDoRepository {
 
 	@Override
 	public ToDo save(ToDo todo) {
-		String sql = "INSERT INTO " + TABLE_NAME + "(title, done) VALUES(?,?)";
-		try (
-			Connection c = dataSource.getConnection();
-			PreparedStatement ps = c.prepareStatement(sql)){
+		String sql = INSERT;
+		try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setString(1, todo.getTitle());
 			ps.setBoolean(2, todo.isDone());
 			ps.executeUpdate();
-			
+
 			return todo;
-				
-			}catch (SQLException e) {
+
+		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	@Override
 	public Optional<ToDo> findByTitle(String title) {
-		String sql = "SELECT title, done FROM " + TABLE_NAME + " WHERE title = ?";
-		try (
-			Connection c = dataSource.getConnection(); 
-			PreparedStatement ps = c.prepareStatement(sql)) {
+		String sql = SELECT_BY_TITLE;
+		try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setString(1, title);
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next()) {
@@ -59,7 +60,7 @@ public class ToDoSQLRepository implements ToDoRepository {
 
 	@Override
 	public List<ToDo> findAll() {
-		String sql = "SELECT title, done FROM " + TABLE_NAME + " ORDER BY title";
+		String sql = SELECT_ALL;
 		List<ToDo> result = new ArrayList<>();
 		try (Connection c = dataSource.getConnection();
 				PreparedStatement ps = c.prepareStatement(sql);
@@ -75,13 +76,12 @@ public class ToDoSQLRepository implements ToDoRepository {
 
 	@Override
 	public void deleteByTitle(String title) {
-		String sql = "DELETE FROM " + TABLE_NAME + " WHERE title = ?";
-		try (Connection c = dataSource.getConnection();
-				PreparedStatement ps = c.prepareStatement(sql)){
+		String sql = DELETE;
+		try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setString(1, title);
 			ps.executeUpdate();
-			
-		}catch (SQLException e) {
+
+		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
