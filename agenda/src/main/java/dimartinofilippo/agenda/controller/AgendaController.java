@@ -27,7 +27,7 @@ public class AgendaController {
 	public void addToDo(ToDo todo) {
 		Optional<ToDo> existingTodo = todoRepository.findByTitle(todo.getTitle());
 		if (existingTodo.isPresent()) {
-			todoView.showError("same ToDo already in the agenda" + existingTodo.get().getTitle());
+			todoView.showError("same ToDo already in the agenda: " + existingTodo.get().getTitle());
 			return;
 		}
 		
@@ -40,7 +40,7 @@ public class AgendaController {
 		Optional<ToDo> existingTodo = todoRepository.findByTitle(todo.getTitle());
 
 		if(existingTodo.isEmpty()) {
-			todoView.showError("ToDo doesn't exist" + todo.getTitle());
+			todoView.showError("ToDo doesn't exist: " + todo.getTitle());
 			return;
 		}
 		
