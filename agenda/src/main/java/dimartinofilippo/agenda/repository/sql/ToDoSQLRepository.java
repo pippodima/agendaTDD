@@ -75,8 +75,15 @@ public class ToDoSQLRepository implements ToDoRepository {
 
 	@Override
 	public void deleteByTitle(String title) {
-		// TODO Auto-generated method stub
-
+		String sql = "DELETE FROM " + TABLE_NAME + " WHERE title = ?";
+		try (Connection c = dataSource.getConnection();
+				PreparedStatement ps = c.prepareStatement(sql)){
+			ps.setString(1, title);
+			ps.executeUpdate();
+			
+		}catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 }
