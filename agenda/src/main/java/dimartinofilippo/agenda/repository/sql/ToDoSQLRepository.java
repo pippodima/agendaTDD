@@ -24,14 +24,27 @@ public class ToDoSQLRepository implements ToDoRepository {
 
 	@Override
 	public ToDo save(ToDo todo) {
-		// TODO Auto-generated method stub
-		return null;
+		String sql = "INSERT INTO " + TABLE_NAME + "(title, done) VALUES(?,?)";
+		try (
+			Connection c = dataSource.getConnection();
+			PreparedStatement ps = c.prepareStatement(sql)){
+			ps.setString(1, todo.getTitle());
+			ps.setBoolean(2, todo.isDone());
+			ps.executeUpdate();
+			
+			return todo;
+				
+			}catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
 	public Optional<ToDo> findByTitle(String title) {
 		String sql = "SELECT title, done FROM " + TABLE_NAME + " WHERE title = ?";
-		try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+		try (
+			Connection c = dataSource.getConnection(); 
+			PreparedStatement ps = c.prepareStatement(sql)) {
 			ps.setString(1, title);
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next()) {
