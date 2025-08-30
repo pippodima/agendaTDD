@@ -30,7 +30,17 @@ public class ToDoSQLRepository implements ToDoRepository {
 
 	@Override
 	public Optional<ToDo> findByTitle(String title) {
-		// TODO Auto-generated method stub
+		String sql = "SELECT title, done FROM " + TABLE_NAME + " WHERE title = ?";
+		try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+			ps.setString(1, title);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return Optional.of(new ToDo(rs.getString("title"), rs.getBoolean("done")));
+				}
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 		return Optional.empty();
 	}
 
