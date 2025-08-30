@@ -20,7 +20,7 @@
 		<mongo.version>3.12.14</mongo.version>
 		<mongo.java.server.version>1.11.0</mongo.java.server.version>
 		<assertj.version>3.24.2</assertj.version>
-		<testcontainers.version>1.10.5</testcontainers.version>
+		<testcontainers.version>1.18.3</testcontainers.version>
 	</properties>
 
 	<dependencyManagement>
@@ -93,6 +93,13 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>testcontainers</artifactId>
+			<version>${testcontainers.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>junit-jupiter</artifactId>
 			<version>${testcontainers.version}</version>
 			<scope>test</scope>
 		</dependency>
