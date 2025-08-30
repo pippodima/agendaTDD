@@ -1,5 +1,9 @@
 package dimartinofilippo.agenda.repository.sql;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -11,8 +15,9 @@ import dimartinofilippo.agenda.repository.ToDoRepository;
 
 public class ToDoSQLRepository implements ToDoRepository {
 
+	private static final String TABLE_NAME = "todos";
 	private DataSource dataSource;
-	
+
 	public ToDoSQLRepository(DataSource dataSource) {
 		this.dataSource = dataSource;
 	}
@@ -30,8 +35,19 @@ public class ToDoSQLRepository implements ToDoRepository {
 	}
 
 	@Override
-	public List<ToDo> findAll() {		// TODO Auto-generated method stub
-		return new ArrayList<ToDo>();
+	public List<ToDo> findAll() {
+		String sql = "SELECT title, done FROM " + TABLE_NAME + " ORDER BY title";
+		List<ToDo> result = new ArrayList<>();
+		try (Connection c = dataSource.getConnection();
+				PreparedStatement ps = c.prepareStatement(sql);
+				ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				result.add(new ToDo(rs.getString("title"), rs.getBoolean("done")));
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		return result;
 	}
 
 	@Override
