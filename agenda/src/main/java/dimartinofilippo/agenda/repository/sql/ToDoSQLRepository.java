@@ -3,10 +3,16 @@ package dimartinofilippo.agenda.repository.sql;
 import java.util.List;
 import java.util.Optional;
 
+import javax.sql.DataSource;
+
 import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.repository.ToDoRepository;
 
 public class ToDoSQLRepository implements ToDoRepository {
+
+	public ToDoSQLRepository(DataSource dataSource) {
+		// TODO Auto-generated constructor stub
+	}
 
 	@Override
 	public ToDo save(ToDo todo) {
@@ -29,7 +35,7 @@ public class ToDoSQLRepository implements ToDoRepository {
 	@Override
 	public void deleteByTitle(String title) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }
