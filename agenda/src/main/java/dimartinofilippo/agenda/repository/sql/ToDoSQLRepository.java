@@ -1,5 +1,6 @@
 package dimartinofilippo.agenda.repository.sql;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,8 +11,10 @@ import dimartinofilippo.agenda.repository.ToDoRepository;
 
 public class ToDoSQLRepository implements ToDoRepository {
 
+	private DataSource dataSource;
+	
 	public ToDoSQLRepository(DataSource dataSource) {
-		// TODO Auto-generated constructor stub
+		this.dataSource = dataSource;
 	}
 
 	@Override
@@ -27,9 +30,8 @@ public class ToDoSQLRepository implements ToDoRepository {
 	}
 
 	@Override
-	public List<ToDo> findAll() {
-		// TODO Auto-generated method stub
-		return null;
+	public List<ToDo> findAll() {		// TODO Auto-generated method stub
+		return new ArrayList<ToDo>();
 	}
 
 	@Override
