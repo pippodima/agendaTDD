@@ -1,7 +1,5 @@
 package dimartinofilippo.agenda.repository.mongo;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;

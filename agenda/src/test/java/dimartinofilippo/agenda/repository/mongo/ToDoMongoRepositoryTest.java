@@ -1,7 +1,6 @@
 package dimartinofilippo.agenda.repository.mongo;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.InetSocketAddress;
 import java.util.List;
