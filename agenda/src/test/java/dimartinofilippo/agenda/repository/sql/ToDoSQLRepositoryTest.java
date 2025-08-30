@@ -2,7 +2,6 @@ package dimartinofilippo.agenda.repository.sql;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -77,6 +76,13 @@ public class ToDoSQLRepositoryTest {
 		ToDo todo = new ToDo("todo1", false);
 		sqlRepository.save(todo);
 		assertThat(selectAll().contains(todo)).isTrue();
+	}
+
+	@Test
+	void deleteByTitle_removesRow() throws Exception {
+		insert("task1", false);
+		sqlRepository.deleteByTitle("task1");
+		assertThat(selectAll()).isEmpty();
 	}
 
 	// helpers
