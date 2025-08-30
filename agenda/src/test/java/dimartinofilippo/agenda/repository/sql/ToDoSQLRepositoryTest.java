@@ -52,6 +52,18 @@ public class ToDoSQLRepositoryTest {
 		insert("todo2", false);
 		assertThat(sqlRepository.findAll()).containsExactly(new ToDo("todo1", true), new ToDo("todo2", false));
 	}
+	
+	@Test
+	void findByTitle_notFound_returnsEmpty() {
+	assertThat(sqlRepository.findByTitle("missing")).isEmpty();
+	}
+
+	@Test
+	void findByTitle_found_returnsOptional() throws Exception {
+	insert("task1", false);
+	insert("task2", true);
+	assertThat(sqlRepository.findByTitle("task2")).isPresent().contains(new ToDo("task2", true));
+	}
 
 	// helpers
 	private void createSchema() throws Exception {
