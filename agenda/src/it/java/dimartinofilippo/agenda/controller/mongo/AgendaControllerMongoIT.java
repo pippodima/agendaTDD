@@ -18,14 +18,6 @@ import dimartinofilippo.agenda.repository.mongo.ToDoMongoRepository;
 import dimartinofilippo.agenda.view.ToDoView;
 
 
-/**
- * Communicates with a MongoDB server on localhost; start MongoDB with Docker with
- * 
- * <pre>
- * docker run -p 27017:27017 --rm mongo:4.0.5
- * </pre>
- * 
- */
 
 
 public class AgendaControllerMongoIT {
