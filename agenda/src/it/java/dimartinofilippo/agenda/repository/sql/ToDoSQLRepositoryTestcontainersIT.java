@@ -23,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ToDoSqlRepositoryTestcontainersIT {
 
-    @Container
+    @SuppressWarnings("resource")
+	@Container
     public static final PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>("postgres:15-alpine")
                     .withDatabaseName("agenda")
