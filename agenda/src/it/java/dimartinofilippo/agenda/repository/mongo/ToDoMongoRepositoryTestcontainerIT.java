@@ -7,7 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.MongoDBContainer;
+
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -18,14 +19,17 @@ import dimartinofilippo.agenda.model.ToDo;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ToDoMongoRepositoryTestcontainersIT {
 
     @Container
-    public static final GenericContainer<?> mongo =
-            new GenericContainer<>("mongo:4.0.5")
-                    .withExposedPorts(27017);
+    public static final MongoDBContainer mongo =
+            new MongoDBContainer("mongo:4.0.5");
 
     private MongoClient client;
     private ToDoMongoRepository todoRepository;
@@ -33,15 +37,14 @@ class ToDoMongoRepositoryTestcontainersIT {
 
     @BeforeEach
     void setup() {
-        String uri = "mongodb://" + mongo.getHost() + ":" + mongo.getMappedPort(27017);
+    	String uri = "mongodb://" + mongo.getHost() + ":" + mongo.getMappedPort(27017);
+    	client = MongoClients.create(uri);
 
-        client = MongoClients.create(uri);
-
-        todoRepository = new ToDoMongoRepository(client);
         MongoDatabase database = client.getDatabase(ToDoMongoRepository.AGENDA_DB_NAME);
-
         database.drop();
         todoCollection = database.getCollection(ToDoMongoRepository.TODO_COLLECTION_NAME);
+
+        todoRepository = new ToDoMongoRepository(client);
     }
 
     @AfterEach
@@ -76,9 +79,24 @@ class ToDoMongoRepositoryTestcontainersIT {
     		.contains(new ToDo("todo2", false));
     }
     
-
+    @Test
+    void testSave() {
+    	ToDo todo = new ToDo("todo", true);
+    	todoRepository.save(todo);
+    	
+    	assertThat(readAllTodosFromDatabase())
+    		.containsExactly(todo);
+    }
     
-    // helper
+    @Test
+    void testDeleteByTitle() {
+    	addTestToDoToDatabase("todo1", true);
+    	todoRepository.deleteByTitle("todo1");
+    	
+    	assertThat(readAllTodosFromDatabase()).isEmpty();
+    }
+    
+    // helpers
     
     private void addTestToDoToDatabase(String title, boolean done) {
         todoCollection.insertOne(
@@ -86,6 +104,14 @@ class ToDoMongoRepositoryTestcontainersIT {
                         .append("title", title)
                         .append("done", done));
     }
+    
+    private List<ToDo> readAllTodosFromDatabase() {
+        return StreamSupport
+                .stream(todoCollection.find().spliterator(), false)
+                .map(d -> new ToDo("" + d.get("title"), (Boolean) d.get("done")))
+                .collect(Collectors.toList());
+    }
+
 
     
     
