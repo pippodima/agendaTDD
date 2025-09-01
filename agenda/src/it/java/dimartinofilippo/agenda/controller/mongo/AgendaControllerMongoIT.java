@@ -1,4 +1,4 @@
-package dimartinofilippo.agenda.controller;
+package dimartinofilippo.agenda.controller.mongo;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -11,6 +11,7 @@ import org.mockito.MockitoAnnotations;
 
 import com.mongodb.client.MongoClients;
 
+import dimartinofilippo.agenda.controller.AgendaController;
 import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.repository.ToDoRepository;
 import dimartinofilippo.agenda.repository.mongo.ToDoMongoRepository;
@@ -27,7 +28,7 @@ import dimartinofilippo.agenda.view.ToDoView;
  */
 
 
-public class AgendaControllerIT {
+public class AgendaControllerMongoIT {
 	
 	private ToDoView todoView;
 	private ToDoRepository todoRepository;
