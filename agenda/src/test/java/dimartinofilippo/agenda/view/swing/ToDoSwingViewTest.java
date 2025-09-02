@@ -2,8 +2,10 @@ package dimartinofilippo.agenda.view.swing;
 
 import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
+import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.BasicRobot;
 import org.assertj.swing.core.Robot;
+import org.assertj.swing.core.matcher.JLabelMatcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,4 +38,13 @@ class ToDoSwingViewTest {
         window.requireVisible();
         window.requireTitle("Agenda - ToDo List");
     }
+    
+    @Test
+    @GUITest
+    void testControlsInitialStates() {
+        window.label(JLabelMatcher.withText("title"));
+
+        window.textBox("titleTextBox").requireEnabled();
+    }
+
 }
