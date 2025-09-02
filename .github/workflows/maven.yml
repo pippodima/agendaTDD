@@ -22,4 +22,5 @@ jobs:
           java-version: 17
 
       - name: Build and run tests
-        run: mvn clean verify -B
+	  	working-directory: agenda
+        run: mvn clean verify
