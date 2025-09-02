@@ -15,6 +15,7 @@ class ToDoSwingViewTest {
 
     @BeforeEach
     void setUp() {
+    	        
         robot = BasicRobot.robotWithNewAwtHierarchy();
         robot.settings().delayBetweenEvents(50); 
         
@@ -28,6 +29,9 @@ class ToDoSwingViewTest {
     void tearDown() {
         if (window != null) {
             window.cleanUp();
+        }
+        if (robot != null) {
+            robot.cleanUp();
         }
     }
 
