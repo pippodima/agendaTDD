@@ -1,13 +1,39 @@
 package dimartinofilippo.agenda.view.swing;
 
-import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
+import org.assertj.swing.edt.GuiActionRunner;
+import org.assertj.swing.fixture.FrameFixture;
+import org.assertj.swing.core.BasicRobot;
+import org.assertj.swing.core.Robot;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class ToDoSwingViewTest extends AssertJSwingJUnitTestCase{
+class ToDoSwingViewTest {
 
-	@Override
-	protected void onSetUp() throws Exception {
-		// TODO Auto-generated method stub
-		
-	}
+    private FrameFixture window;
+    private Robot robot;
 
+    @BeforeEach
+    void setUp() {
+        robot = BasicRobot.robotWithNewAwtHierarchy();
+        robot.settings().delayBetweenEvents(50); 
+        
+        ToDoSwingView todoSwingView = GuiActionRunner.execute(ToDoSwingView::new);
+
+        window = new FrameFixture(robot, todoSwingView);
+        window.show();
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (window != null) {
+            window.cleanUp();
+        }
+    }
+
+    @Test
+    void testSetup() {
+        window.requireVisible();
+        window.requireTitle("Agenda - ToDo List");
+    }
 }
