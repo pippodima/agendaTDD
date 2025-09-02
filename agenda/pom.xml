@@ -22,6 +22,7 @@
 		<assertj.version>3.24.2</assertj.version>
 		<testcontainers.version>1.18.3</testcontainers.version>
 		<assertj.swing.version>3.17.1</assertj.swing.version>
+		<failsafe.version>3.3.0</failsafe.version>
 	</properties>
 
 	<dependencyManagement>
@@ -164,7 +165,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>${failsafe.version}</version>
 				<executions>
 					<execution>
 						<id>integration-tests</id>
@@ -175,6 +176,17 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>
+						--add-opens java.base/java.util=ALL-UNNAMED
+					</argLine>
+				</configuration>
+			</plugin>
+
 
 			<!-- automated docker maven 
 			<plugin>
