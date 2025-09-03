@@ -176,14 +176,14 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 
 	@Override
 	public void addedToDo(ToDo todo) {
-		// TODO Auto-generated method stub
-		
+		listTodosModel.addElement(todo);
+		resetErrorLabel();
 	}
 
 	@Override
 	public void removedToDo(ToDo todo) {
-		// TODO Auto-generated method stub
-		
+		listTodosModel.removeElement(todo);
+		resetErrorLabel();
 	}
 
 	@Override
@@ -193,6 +193,10 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 
 	public DefaultListModel<ToDo> getListTodosModel() {
 		return listTodosModel;
+	}
+	
+	private void resetErrorLabel() {
+		lblErrorMessage.setText(" ");
 	}
 	
 	
