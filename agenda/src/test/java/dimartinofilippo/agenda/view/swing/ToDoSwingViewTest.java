@@ -63,6 +63,17 @@ class ToDoSwingViewTest {
     	window.textBox("titleTextBox").enterText("todo1");
     	window.button(JButtonMatcher.withText("Add ToDo")).requireEnabled();
     }
+    
+    @Test
+    void addButtonShouldRemainDisabledWhenTitleIsBlank() {
+
+    	window.textBox("titleTextBox").setText("");
+        window.button(JButtonMatcher.withText("Add ToDo")).requireDisabled();
+
+        window.textBox("titleTextBox").setText("   ");
+        window.button(JButtonMatcher.withText("Add ToDo")).requireDisabled();
+    }
+
 
 
 }
