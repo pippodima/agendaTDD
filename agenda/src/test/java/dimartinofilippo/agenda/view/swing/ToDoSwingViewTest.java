@@ -4,6 +4,8 @@ import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.List;
 
 import org.assertj.swing.annotation.GUITest;
@@ -96,6 +98,19 @@ class ToDoSwingViewTest {
         window.list("todoList").clearSelection();
         deleteButton.requireDisabled();
     }
+    
+    @Test
+    public void testsShowAllToDosShouldAddToDoTitleToTheList() {
+        ToDo todo1 = new ToDo("todo1", false);
+        ToDo todo2 = new ToDo("todo2", true);
+
+        GuiActionRunner.execute(() -> todoSwingView.showAllToDos(List.of(todo1, todo2)));
+
+        String[] listContents = window.list("todoList").contents();
+
+        assertThat(listContents).containsExactly(todo1.toString(), todo2.toString());
+    }
+
 
 
 

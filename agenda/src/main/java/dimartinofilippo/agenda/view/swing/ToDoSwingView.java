@@ -9,6 +9,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
@@ -25,35 +26,31 @@ import javax.swing.event.ListSelectionListener;
 import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.view.ToDoView;
 
-public class ToDoSwingView extends JFrame implements ToDoView{
-	
-	private static final long serialVersionUID = 1;
+public class ToDoSwingView extends JFrame implements ToDoView {
+
+    private static final long serialVersionUID = 1L;
+
     private JPanel contentPane;
     private JTextField txtTitle;
     private JCheckBox chkDone;
     private JButton btnAdd;
     private JList<ToDo> listTodos;
+    private DefaultListModel<ToDo> listTodosModel;
     private JScrollPane scrollPane;
     private JButton btnDeleteSelected;
     private JLabel lblErrorMessage;
 
+    public static void main(String[] args) {
+        EventQueue.invokeLater(() -> {
+            try {
+                ToDoSwingView frame = new ToDoSwingView();
+                frame.setVisible(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
 
-	
-	// launch app
-	public static void main (String[] args) {
-		EventQueue.invokeLater(() -> {
-			try {
-				ToDoSwingView frame = new ToDoSwingView();
-				frame.setVisible(true);
-				
-			}catch (Exception e) {
-				e.printStackTrace();
-			}
-		});
-	}
-	
-	//create frame
-	
     public ToDoSwingView() {
         setTitle("Agenda - ToDo List");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -63,14 +60,14 @@ public class ToDoSwingView extends JFrame implements ToDoView{
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         setContentPane(contentPane);
 
-        GridBagLayout gbl_contentPane = new GridBagLayout();
-        gbl_contentPane.columnWidths = new int[]{0, 0, 0};
-        gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0, 0, 0};
-        gbl_contentPane.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-        gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
-        contentPane.setLayout(gbl_contentPane);
+        GridBagLayout gbl = new GridBagLayout();
+        gbl.columnWidths = new int[]{0, 0, 0};
+        gbl.rowHeights = new int[]{0, 0, 0, 0, 0, 0};
+        gbl.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
+        gbl.rowWeights = new double[]{0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
+        contentPane.setLayout(gbl);
 
-        // === Title Label ===
+        // === Title ===
         JLabel lblTitle = new JLabel("Title");
         GridBagConstraints gbc_lblTitle = new GridBagConstraints();
         gbc_lblTitle.anchor = GridBagConstraints.EAST;
@@ -79,7 +76,6 @@ public class ToDoSwingView extends JFrame implements ToDoView{
         gbc_lblTitle.gridy = 0;
         contentPane.add(lblTitle, gbc_lblTitle);
 
-        // === Title TextField ===
         txtTitle = new JTextField();
         txtTitle.setName("titleTextBox");
         GridBagConstraints gbc_txtTitle = new GridBagConstraints();
@@ -89,7 +85,8 @@ public class ToDoSwingView extends JFrame implements ToDoView{
         gbc_txtTitle.gridy = 0;
         contentPane.add(txtTitle, gbc_txtTitle);
         txtTitle.setColumns(15);
-        
+
+        // Enable Add button only when title is non-empty
         KeyAdapter btnAddEnabler = new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
@@ -98,7 +95,7 @@ public class ToDoSwingView extends JFrame implements ToDoView{
         };
         txtTitle.addKeyListener(btnAddEnabler);
 
-        // === Done CheckBox ===
+        // === Done ===
         JLabel lblDone = new JLabel("Done");
         GridBagConstraints gbc_lblDone = new GridBagConstraints();
         gbc_lblDone.anchor = GridBagConstraints.EAST;
@@ -119,7 +116,7 @@ public class ToDoSwingView extends JFrame implements ToDoView{
         // === Add Button ===
         btnAdd = new JButton("Add ToDo");
         btnAdd.setName("addButton");
-        btnAdd.setEnabled(false); // only enabled if title is not empty
+        btnAdd.setEnabled(false);
         GridBagConstraints gbc_btnAdd = new GridBagConstraints();
         gbc_btnAdd.gridwidth = 2;
         gbc_btnAdd.insets = new Insets(0, 0, 5, 0);
@@ -127,8 +124,20 @@ public class ToDoSwingView extends JFrame implements ToDoView{
         gbc_btnAdd.gridy = 2;
         contentPane.add(btnAdd, gbc_btnAdd);
 
-        // === List of ToDos ===
-        scrollPane = new JScrollPane();
+        // === ToDo List ===
+        listTodosModel = new DefaultListModel<>();
+        listTodos = new JList<>(listTodosModel);
+        listTodos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listTodos.setName("todoList");
+
+        listTodos.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                btnDeleteSelected.setEnabled(!listTodos.isSelectionEmpty());
+            }
+        });
+
+        scrollPane = new JScrollPane(listTodos);
         GridBagConstraints gbc_scrollPane = new GridBagConstraints();
         gbc_scrollPane.gridwidth = 2;
         gbc_scrollPane.insets = new Insets(0, 0, 5, 0);
@@ -137,22 +146,10 @@ public class ToDoSwingView extends JFrame implements ToDoView{
         gbc_scrollPane.gridy = 3;
         contentPane.add(scrollPane, gbc_scrollPane);
 
-        listTodos = new JList<>();
-        listTodos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        listTodos.setName("todoList");
-        scrollPane.setViewportView(listTodos);
-        
-        listTodos.addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                btnDeleteSelected.setEnabled(!listTodos.isSelectionEmpty());
-            }
-        });
-
         // === Delete Button ===
         btnDeleteSelected = new JButton("Delete Selected");
         btnDeleteSelected.setName("deleteButton");
-        btnDeleteSelected.setEnabled(false); // enabled only if a todo is selected
+        btnDeleteSelected.setEnabled(false);
         GridBagConstraints gbc_btnDelete = new GridBagConstraints();
         gbc_btnDelete.gridwidth = 2;
         gbc_btnDelete.insets = new Insets(0, 0, 5, 0);
@@ -170,11 +167,12 @@ public class ToDoSwingView extends JFrame implements ToDoView{
         gbc_lblError.gridy = 5;
         contentPane.add(lblErrorMessage, gbc_lblError);
     }
-	@Override
-	public void showAllToDos(List<ToDo> todos) {
-	    listTodos.setListData(todos.toArray(new ToDo[0]));
-		
-	}
+
+    @Override
+    public void showAllToDos(List<ToDo> todos) {
+        listTodosModel.clear();
+        todos.forEach(listTodosModel::addElement);
+    }
 
 	@Override
 	public void addedToDo(ToDo todo) {
