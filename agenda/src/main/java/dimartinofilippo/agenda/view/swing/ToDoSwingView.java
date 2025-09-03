@@ -5,6 +5,8 @@ import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -85,6 +87,14 @@ public class ToDoSwingView extends JFrame implements ToDoView{
         gbc_txtTitle.gridy = 0;
         contentPane.add(txtTitle, gbc_txtTitle);
         txtTitle.setColumns(15);
+        
+        KeyAdapter btnAddEnabler = new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                btnAdd.setEnabled(!txtTitle.getText().trim().isEmpty());
+            }
+        };
+        txtTitle.addKeyListener(btnAddEnabler);
 
         // === Done CheckBox ===
         JLabel lblDone = new JLabel("Done");
