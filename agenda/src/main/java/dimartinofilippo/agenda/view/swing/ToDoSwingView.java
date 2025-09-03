@@ -172,7 +172,7 @@ public class ToDoSwingView extends JFrame implements ToDoView{
     }
 	@Override
 	public void showAllToDos(List<ToDo> todos) {
-		// TODO Auto-generated method stub
+	    listTodos.setListData(todos.toArray(new ToDo[0]));
 		
 	}
 
