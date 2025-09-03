@@ -19,6 +19,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.view.ToDoView;
@@ -139,6 +141,13 @@ public class ToDoSwingView extends JFrame implements ToDoView{
         listTodos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         listTodos.setName("todoList");
         scrollPane.setViewportView(listTodos);
+        
+        listTodos.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                btnDeleteSelected.setEnabled(!listTodos.isSelectionEmpty());
+            }
+        });
 
         // === Delete Button ===
         btnDeleteSelected = new JButton("Delete Selected");
