@@ -113,12 +113,12 @@ class ToDoSwingViewTest {
     
     @Test
     public void testShowErrorShouldShowTheMessageInTheErrorLabel() {
-        ToDo todo = new ToDo("Buy milk", false);
+        ToDo todo = new ToDo("todo1", false);
 
-        GuiActionRunner.execute(() -> todoSwingView.showError("error message", todo));
+        GuiActionRunner.execute(() -> todoSwingView.showError("error"));
 
         window.label("errorMessageLabel")
-              .requireText("error message: " + todo);
+              .requireText("Error");
     }
 
 
