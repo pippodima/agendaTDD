@@ -42,11 +42,20 @@ class ToDoSwingViewTest {
     @Test
     @GUITest
     void testControlsInitialStates() {
-    	window.label(JLabelMatcher.withText("Title"));
+        window.label(JLabelMatcher.withText("Title"));
         window.label(JLabelMatcher.withText("Done"));
 
-        window.textBox("titleTextBox").requireEnabled();
-        window.textBox("doneTextBox").requireEnabled();
+        window.textBox("titleTextBox").requireEnabled().requireText("");
+        window.checkBox("doneCheckBox").requireEnabled().requireNotSelected();
+
+        window.button("addButton").requireDisabled();
+        window.button("deleteButton").requireDisabled();
+
+        window.list("todoList").requireEnabled();
+        window.list("todoList").requireItemCount(0);
+
+        window.label("errorMessageLabel").requireText(" ");
     }
+
 
 }
