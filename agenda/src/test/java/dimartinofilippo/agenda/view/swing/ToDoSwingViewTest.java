@@ -110,6 +110,17 @@ class ToDoSwingViewTest {
 
         assertThat(listContents).containsExactly(todo1.toString(), todo2.toString());
     }
+    
+    @Test
+    public void testShowErrorShouldShowTheMessageInTheErrorLabel() {
+        ToDo todo = new ToDo("Buy milk", false);
+
+        GuiActionRunner.execute(() -> todoSwingView.showError("error message", todo));
+
+        window.label("errorMessageLabel")
+              .requireText("error message: " + todo);
+    }
+
 
 
 
