@@ -2,6 +2,10 @@ package dimartinofilippo.agenda.view.swing;
 
 import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
+import org.assertj.swing.fixture.JButtonFixture;
+
+import java.util.List;
+
 import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.BasicRobot;
 import org.assertj.swing.core.Robot;
@@ -11,17 +15,20 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import dimartinofilippo.agenda.model.ToDo;
+
 class ToDoSwingViewTest {
 
     private FrameFixture window;
     private Robot robot;
+    ToDoSwingView todoSwingView;
 
     @BeforeEach
     void setUp() {
         robot = BasicRobot.robotWithNewAwtHierarchy();
         robot.settings().delayBetweenEvents(50); 
         
-        ToDoSwingView todoSwingView = GuiActionRunner.execute(ToDoSwingView::new);
+        todoSwingView = GuiActionRunner.execute(ToDoSwingView::new);
 
         window = new FrameFixture(robot, todoSwingView);
         window.show();
@@ -73,6 +80,23 @@ class ToDoSwingViewTest {
         window.textBox("titleTextBox").setText("   ");
         window.button(JButtonMatcher.withText("Add ToDo")).requireDisabled();
     }
+    
+    @Test
+    public void testDeleteButtonShouldBeEnabledOnlyWhenAToDoIsSelected() {
+        ToDo todo = new ToDo("Buy milk", false);
+        GuiActionRunner.execute(() -> todoSwingView.showAllToDos(List.of(todo)));
+
+        JButtonFixture deleteButton = window.button("deleteButton");
+
+        deleteButton.requireDisabled();
+
+        window.list("todoList").selectItem(0);
+        deleteButton.requireEnabled();
+
+        window.list("todoList").clearSelection();
+        deleteButton.requireDisabled();
+    }
+
 
 
 
