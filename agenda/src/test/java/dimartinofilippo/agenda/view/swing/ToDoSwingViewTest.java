@@ -5,6 +5,7 @@ import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.BasicRobot;
 import org.assertj.swing.core.Robot;
+import org.assertj.swing.core.matcher.JButtonMatcher;
 import org.assertj.swing.core.matcher.JLabelMatcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,6 +56,12 @@ class ToDoSwingViewTest {
         window.list("todoList").requireItemCount(0);
 
         window.label("errorMessageLabel").requireText(" ");
+    }
+    
+    @Test
+    public void testWhenTitleNonEmptyAddButtonShouldBeEnabled() {
+    	window.textBox("titleTextBox").enterText("todo1");
+    	window.button(JButtonMatcher.withText("Add ToDo")).requireEnabled();
     }
 
 
