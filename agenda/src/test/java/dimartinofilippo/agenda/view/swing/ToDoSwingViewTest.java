@@ -8,6 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import javax.swing.DefaultListModel;
+
 import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.BasicRobot;
 import org.assertj.swing.core.Robot;
@@ -113,12 +115,41 @@ class ToDoSwingViewTest {
     
     @Test
     public void testShowErrorShouldShowTheMessageInTheErrorLabel() {
-        ToDo todo = new ToDo("todo1", false);
-
         GuiActionRunner.execute(() -> todoSwingView.showError("Error"));
 
         window.label("errorMessageLabel")
               .requireText("Error");
+    }
+    
+    @Test
+    public void testToDoAddedShouldAddToDoToListAndResetError() {
+    	ToDo todo = new ToDo("todo1", true);
+    	GuiActionRunner.execute(() -> todoSwingView.addedToDo(todo));
+    	
+    	String[] listContents = window.list("todoList").contents();
+    	assertThat(listContents).containsExactly(todo.toString());
+    	
+    	window.label("errorMessageLabel").requireText(" ");
+    	
+    }
+    
+    @Test
+    public void testToDoRemovedShouldRemoveTheToDoFromTheListAndResetTheErrorLabel() {
+    	ToDo todo1 = new ToDo("todo1", true);
+    	ToDo todo2 = new ToDo("todo2", false);
+    	
+        GuiActionRunner.execute(() -> {
+            DefaultListModel<ToDo> listModel = todoSwingView.getListTodosModel();
+            listModel.addElement(todo1);
+            listModel.addElement(todo2);
+        });
+        
+        GuiActionRunner.execute(() -> todoSwingView.removedToDo(todo1));
+        
+    	String[] listContents = window.list("todoList").contents();
+    	assertThat(listContents).containsExactly(todo2.toString());
+
+    	window.label("errorMessageLabel").requireText(" ");
     }
 
 

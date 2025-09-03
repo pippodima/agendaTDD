@@ -126,7 +126,7 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 
         // === ToDo List ===
         listTodosModel = new DefaultListModel<>();
-        listTodos = new JList<>(listTodosModel);
+        listTodos = new JList<>(getListTodosModel());
         listTodos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         listTodos.setName("todoList");
 
@@ -170,8 +170,8 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 
     @Override
     public void showAllToDos(List<ToDo> todos) {
-        listTodosModel.clear();
-        todos.forEach(listTodosModel::addElement);
+        getListTodosModel().clear();
+        todos.forEach(getListTodosModel()::addElement);
     }
 
 	@Override
@@ -189,6 +189,10 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 	@Override
 	public void showError(String string) {
 		lblErrorMessage.setText(string);
+	}
+
+	public DefaultListModel<ToDo> getListTodosModel() {
+		return listTodosModel;
 	}
 	
 	
