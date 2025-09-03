@@ -188,8 +188,7 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 
 	@Override
 	public void showError(String string) {
-		// TODO Auto-generated method stub
-		
+		lblErrorMessage.setText(string);
 	}
 	
 	
