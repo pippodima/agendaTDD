@@ -42,9 +42,11 @@ class ToDoSwingViewTest {
     @Test
     @GUITest
     void testControlsInitialStates() {
-        window.label(JLabelMatcher.withText("title"));
+    	window.label(JLabelMatcher.withText("Title"));
+        window.label(JLabelMatcher.withText("Done"));
 
         window.textBox("titleTextBox").requireEnabled();
+        window.textBox("doneTextBox").requireEnabled();
     }
 
 }
