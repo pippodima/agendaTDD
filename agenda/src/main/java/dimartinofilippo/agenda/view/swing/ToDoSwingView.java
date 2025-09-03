@@ -1,16 +1,21 @@
 package dimartinofilippo.agenda.view.swing;
 
-import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.List;
 
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 
 import dimartinofilippo.agenda.model.ToDo;
@@ -19,9 +24,14 @@ import dimartinofilippo.agenda.view.ToDoView;
 public class ToDoSwingView extends JFrame implements ToDoView{
 	
 	private static final long serialVersionUID = 1;
-	private JPanel contentPane;
+    private JPanel contentPane;
     private JTextField txtTitle;
-    private JTextField txtDone;
+    private JCheckBox chkDone;
+    private JButton btnAdd;
+    private JList<ToDo> listTodos;
+    private JScrollPane scrollPane;
+    private JButton btnDeleteSelected;
+    private JLabel lblErrorMessage;
 
 
 	
@@ -51,48 +61,95 @@ public class ToDoSwingView extends JFrame implements ToDoView{
 
         GridBagLayout gbl_contentPane = new GridBagLayout();
         gbl_contentPane.columnWidths = new int[]{0, 0, 0};
-        gbl_contentPane.rowHeights = new int[]{0, 0, 0};
+        gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0, 0, 0};
         gbl_contentPane.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-        gbl_contentPane.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+        gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
         contentPane.setLayout(gbl_contentPane);
 
-        // Label for Title
+        // === Title Label ===
         JLabel lblTitle = new JLabel("Title");
         GridBagConstraints gbc_lblTitle = new GridBagConstraints();
-        gbc_lblTitle.insets = new Insets(0, 0, 5, 5);
         gbc_lblTitle.anchor = GridBagConstraints.EAST;
+        gbc_lblTitle.insets = new Insets(0, 0, 5, 5);
         gbc_lblTitle.gridx = 0;
         gbc_lblTitle.gridy = 0;
         contentPane.add(lblTitle, gbc_lblTitle);
 
-        // TextField for Title
+        // === Title TextField ===
         txtTitle = new JTextField();
-        txtTitle.setName("titleTextBox"); // 👈 important for AssertJ Swing tests
+        txtTitle.setName("titleTextBox");
         GridBagConstraints gbc_txtTitle = new GridBagConstraints();
         gbc_txtTitle.fill = GridBagConstraints.HORIZONTAL;
+        gbc_txtTitle.insets = new Insets(0, 0, 5, 0);
         gbc_txtTitle.gridx = 1;
         gbc_txtTitle.gridy = 0;
         contentPane.add(txtTitle, gbc_txtTitle);
-        txtTitle.setColumns(20);
+        txtTitle.setColumns(15);
 
-        // Label for Done
+        // === Done CheckBox ===
         JLabel lblDone = new JLabel("Done");
         GridBagConstraints gbc_lblDone = new GridBagConstraints();
-        gbc_lblDone.insets = new Insets(0, 0, 0, 5);
         gbc_lblDone.anchor = GridBagConstraints.EAST;
+        gbc_lblDone.insets = new Insets(0, 0, 5, 5);
         gbc_lblDone.gridx = 0;
         gbc_lblDone.gridy = 1;
         contentPane.add(lblDone, gbc_lblDone);
 
-        // TextField for Done
-        txtDone = new JTextField();
-        txtDone.setName("doneTextBox"); // 👈 important for tests
-        GridBagConstraints gbc_txtDone = new GridBagConstraints();
-        gbc_txtDone.fill = GridBagConstraints.HORIZONTAL;
-        gbc_txtDone.gridx = 1;
-        gbc_txtDone.gridy = 1;
-        contentPane.add(txtDone, gbc_txtDone);
-        txtDone.setColumns(20);
+        chkDone = new JCheckBox();
+        chkDone.setName("doneCheckBox");
+        GridBagConstraints gbc_chkDone = new GridBagConstraints();
+        gbc_chkDone.anchor = GridBagConstraints.WEST;
+        gbc_chkDone.insets = new Insets(0, 0, 5, 0);
+        gbc_chkDone.gridx = 1;
+        gbc_chkDone.gridy = 1;
+        contentPane.add(chkDone, gbc_chkDone);
+
+        // === Add Button ===
+        btnAdd = new JButton("Add ToDo");
+        btnAdd.setName("addButton");
+        btnAdd.setEnabled(false); // only enabled if title is not empty
+        GridBagConstraints gbc_btnAdd = new GridBagConstraints();
+        gbc_btnAdd.gridwidth = 2;
+        gbc_btnAdd.insets = new Insets(0, 0, 5, 0);
+        gbc_btnAdd.gridx = 0;
+        gbc_btnAdd.gridy = 2;
+        contentPane.add(btnAdd, gbc_btnAdd);
+
+        // === List of ToDos ===
+        scrollPane = new JScrollPane();
+        GridBagConstraints gbc_scrollPane = new GridBagConstraints();
+        gbc_scrollPane.gridwidth = 2;
+        gbc_scrollPane.insets = new Insets(0, 0, 5, 0);
+        gbc_scrollPane.fill = GridBagConstraints.BOTH;
+        gbc_scrollPane.gridx = 0;
+        gbc_scrollPane.gridy = 3;
+        contentPane.add(scrollPane, gbc_scrollPane);
+
+        listTodos = new JList<>();
+        listTodos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listTodos.setName("todoList");
+        scrollPane.setViewportView(listTodos);
+
+        // === Delete Button ===
+        btnDeleteSelected = new JButton("Delete Selected");
+        btnDeleteSelected.setName("deleteButton");
+        btnDeleteSelected.setEnabled(false); // enabled only if a todo is selected
+        GridBagConstraints gbc_btnDelete = new GridBagConstraints();
+        gbc_btnDelete.gridwidth = 2;
+        gbc_btnDelete.insets = new Insets(0, 0, 5, 0);
+        gbc_btnDelete.gridx = 0;
+        gbc_btnDelete.gridy = 4;
+        contentPane.add(btnDeleteSelected, gbc_btnDelete);
+
+        // === Error Message ===
+        lblErrorMessage = new JLabel(" ");
+        lblErrorMessage.setName("errorMessageLabel");
+        lblErrorMessage.setForeground(Color.RED);
+        GridBagConstraints gbc_lblError = new GridBagConstraints();
+        gbc_lblError.gridwidth = 2;
+        gbc_lblError.gridx = 0;
+        gbc_lblError.gridy = 5;
+        contentPane.add(lblErrorMessage, gbc_lblError);
     }
 	@Override
 	public void showAllToDos(List<ToDo> todos) {
