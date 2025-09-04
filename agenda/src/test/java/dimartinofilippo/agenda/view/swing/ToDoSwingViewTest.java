@@ -18,7 +18,10 @@ import org.assertj.swing.core.matcher.JLabelMatcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
+import dimartinofilippo.agenda.controller.AgendaController;
 import dimartinofilippo.agenda.model.ToDo;
 
 class ToDoSwingViewTest {
@@ -26,9 +29,17 @@ class ToDoSwingViewTest {
     private FrameFixture window;
     private Robot robot;
     ToDoSwingView todoSwingView;
+    
+    @Mock
+    private AgendaController agendaController;
+    
+    private AutoCloseable closeableMocks;
+        
 
     @BeforeEach
     void setUp() {
+    	closeableMocks = MockitoAnnotations.openMocks(this);
+    	
         robot = BasicRobot.robotWithNewAwtHierarchy();
         robot.settings().delayBetweenEvents(50); 
         
@@ -39,10 +50,11 @@ class ToDoSwingViewTest {
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
         if (window != null) {
             window.cleanUp();
         }
+        closeableMocks.close();
     }
 
     @Test
@@ -152,6 +164,7 @@ class ToDoSwingViewTest {
     	window.label("errorMessageLabel").requireText(" ");
     }
 
+    
 
 
 

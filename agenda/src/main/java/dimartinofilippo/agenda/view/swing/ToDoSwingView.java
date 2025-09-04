@@ -23,6 +23,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import dimartinofilippo.agenda.controller.AgendaController;
 import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.view.ToDoView;
 
@@ -39,6 +40,7 @@ public class ToDoSwingView extends JFrame implements ToDoView {
     private JScrollPane scrollPane;
     private JButton btnDeleteSelected;
     private JLabel lblErrorMessage;
+    private AgendaController agendaController;
 
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
@@ -197,6 +199,10 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 	
 	private void resetErrorLabel() {
 		lblErrorMessage.setText(" ");
+	}
+
+	public void setAgendaController(AgendaController agendaController) {
+		this.agendaController = agendaController;
 	}
 	
 	
