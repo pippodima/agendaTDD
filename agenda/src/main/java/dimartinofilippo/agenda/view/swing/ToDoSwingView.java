@@ -119,6 +119,9 @@ public class ToDoSwingView extends JFrame implements ToDoView {
         btnAdd = new JButton("Add ToDo");
         btnAdd.setName("addButton");
         btnAdd.setEnabled(false);
+        btnAdd.addActionListener(
+        		e -> agendaController.addToDo(new ToDo(txtTitle.getText(), chkDone.isSelected()))
+        		);
         GridBagConstraints gbc_btnAdd = new GridBagConstraints();
         gbc_btnAdd.gridwidth = 2;
         gbc_btnAdd.insets = new Insets(0, 0, 5, 0);
@@ -152,6 +155,11 @@ public class ToDoSwingView extends JFrame implements ToDoView {
         btnDeleteSelected = new JButton("Delete Selected");
         btnDeleteSelected.setName("deleteButton");
         btnDeleteSelected.setEnabled(false);
+        btnDeleteSelected.addActionListener(
+        		e -> agendaController.deleteToDo(listTodos.getSelectedValue())
+        		);
+
+        
         GridBagConstraints gbc_btnDelete = new GridBagConstraints();
         gbc_btnDelete.gridwidth = 2;
         gbc_btnDelete.insets = new Insets(0, 0, 5, 0);

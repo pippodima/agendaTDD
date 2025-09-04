@@ -44,7 +44,11 @@ class ToDoSwingViewTest {
         robot = BasicRobot.robotWithNewAwtHierarchy();
         robot.settings().delayBetweenEvents(50); 
         
-        todoSwingView = GuiActionRunner.execute(ToDoSwingView::new);
+        todoSwingView = GuiActionRunner.execute(() -> {
+            ToDoSwingView view = new ToDoSwingView();
+            view.setAgendaController(agendaController);
+            return view;
+        });
 
         window = new FrameFixture(robot, todoSwingView);
         window.show();
