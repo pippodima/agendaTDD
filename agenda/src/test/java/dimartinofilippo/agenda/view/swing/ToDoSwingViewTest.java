@@ -5,6 +5,7 @@ import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 
 import java.util.List;
 
@@ -162,6 +163,31 @@ class ToDoSwingViewTest {
     	assertThat(listContents).containsExactly(todo2.toString());
 
     	window.label("errorMessageLabel").requireText(" ");
+    }
+    
+    @Test
+    public void testAddButtonShouldDelegateToControllerAddToDo() {
+    	window.textBox("titleTextBox").enterText("todo");
+    	window.button(JButtonMatcher.withText("Add ToDo")).click();
+    	
+    	verify(agendaController).addToDo(new ToDo("todo", false));    	
+    }
+    
+    @Test
+    public void testDeleteButtonShouldDelegateToControllerDeleteToDo() {
+    	ToDo todo1 = new ToDo("todo1", true);
+    	ToDo todo2 = new ToDo("todo2", false);
+
+    	GuiActionRunner.execute(() -> {
+    		DefaultListModel<ToDo> listModel = todoSwingView.getListTodosModel();
+    		listModel.addElement(todo1);
+    		listModel.addElement(todo2);
+    	});
+    	
+    	window.list("todoList").selectItem(1);
+    	window.button(JButtonMatcher.withText("Delete Selected")).click();
+    	
+    	verify(agendaController).deleteToDo(todo2);
     }
 
     
