@@ -89,6 +89,59 @@ class ToDoSwingViewSQLIT {
         assertThat(listContents).containsExactly(todo1.toString(), todo2.toString());
     }
     
+    @Test
+    @GUITest
+    void testAddButtonSuccess() {
+        window.textBox("titleTextBox").enterText("Learn Java SQL");
+        window.checkBox("doneCheckBox").uncheck();
+        window.button("addButton").click();
+        
+        String[] listContents = window.list("todoList").contents();
+        assertThat(listContents).containsExactly(new ToDo("Learn Java SQL", false).toString());
+    }
+    
+    @Test
+    @GUITest
+    void testAddButtonError() {
+        todoRepository.save(new ToDo("Existing Task SQL", true));
+        
+        window.textBox("titleTextBox").enterText("Existing Task SQL");
+        window.checkBox("doneCheckBox").uncheck();
+        window.button("addButton").click();
+        
+        assertThat(window.list("todoList").contents()).isEmpty();
+        
+        window.label("errorMessageLabel")
+            .requireText("same ToDo already in the agenda: Existing Task SQL");
+    }
+    
+    @Test
+    @GUITest
+    void testDeleteButtonSuccess() {
+        GuiActionRunner.execute(() -> agendaController.addToDo(new ToDo("Task to remove", false)));
+        
+        window.list("todoList").selectItem(0);
+        window.button("deleteButton").click();
+        
+        assertThat(window.list("todoList").contents()).isEmpty();
+    }
+    
+    @Test
+    @GUITest
+    void testDeleteButtonError() {
+        ToDo nonExistentTodo = new ToDo("Non-existent task SQL", false);
+        GuiActionRunner.execute(() -> todoSwingView.getListTodosModel().addElement(nonExistentTodo));
+        
+        window.list("todoList").selectItem(0);
+        window.button("deleteButton").click();
+        
+        String[] listContents = window.list("todoList").contents();
+        assertThat(listContents).containsExactly(nonExistentTodo.toString());
+        
+        window.label("errorMessageLabel")
+            .requireText("ToDo doesn't exist: Non-existent task SQL");
+    }
+    
 
     
     // helpers
