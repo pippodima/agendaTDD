@@ -142,6 +142,35 @@ class ToDoSwingViewSQLIT {
             .requireText("ToDo doesn't exist: Non-existent task SQL");
     }
     
+    @Test
+    @GUITest
+    void testAddAndDeleteFlow() {
+        window.textBox("titleTextBox").enterText("Complete flow test SQL");
+        window.checkBox("doneCheckBox").check();
+        window.button("addButton").click();
+        
+        String[] listContents = window.list("todoList").contents();
+        assertThat(listContents).containsExactly(new ToDo("Complete flow test SQL", true).toString());
+        
+        window.list("todoList").selectItem(0);
+        window.button("deleteButton").click();
+        
+        assertThat(window.list("todoList").contents()).isEmpty();
+    }
+    
+    @Test
+    @GUITest
+    void testFormResetAfterSuccessfulAdd() {
+        window.textBox("titleTextBox").enterText("Test task SQL");
+        window.checkBox("doneCheckBox").check();
+        window.button("addButton").click();
+        
+        window.textBox("titleTextBox").requireText("Test task SQL");
+        window.checkBox("doneCheckBox").requireSelected();
+        
+        window.label("errorMessageLabel").requireText(" ");
+    }
+    
 
     
     // helpers
