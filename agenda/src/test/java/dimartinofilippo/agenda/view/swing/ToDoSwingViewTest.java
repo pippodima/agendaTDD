@@ -71,8 +71,8 @@ class ToDoSwingViewTest {
     @Test
     @GUITest
     void testControlsInitialStates() {
-        window.label(JLabelMatcher.withText("Title"));
-        window.label(JLabelMatcher.withText("Done"));
+        window.label(JLabelMatcher.withText("Title")).requireVisible();
+        window.label(JLabelMatcher.withText("Done")).requireVisible();
 
         window.textBox("titleTextBox").requireEnabled().requireText("");
         window.checkBox("doneCheckBox").requireEnabled().requireNotSelected();
