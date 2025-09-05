@@ -1,11 +1,15 @@
 package dimartinofilippo.agenda.view.swing.sql;
 
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.BasicRobot;
 import org.assertj.swing.core.Robot;
 import org.assertj.swing.edt.GuiActionRunner;
@@ -14,9 +18,11 @@ import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import dimartinofilippo.agenda.controller.AgendaController;
+import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.repository.sql.ToDoSQLRepository;
 import dimartinofilippo.agenda.view.swing.ToDoSwingView;
 
@@ -69,7 +75,24 @@ class ToDoSwingViewSQLIT {
         }
     }
     
+    @Test
+    @GUITest
+    void testAllToDos() {
+        ToDo todo1 = new ToDo("Buy groceries", false);
+        ToDo todo2 = new ToDo("Complete project", true);
+        todoRepository.save(todo1);
+        todoRepository.save(todo2);
+        
+        GuiActionRunner.execute(() -> agendaController.allToDos());
+        
+        List<String> listContents = List.of(window.list("todoList").contents());
+        assertThat(listContents).containsExactly(todo1.toString(), todo2.toString());
+    }
+    
+
+    
     // helpers
+  
     
     private void createSchema() {
         try (Connection c = dataSource.getConnection(); 
