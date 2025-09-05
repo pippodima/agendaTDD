@@ -171,6 +171,44 @@ class ToDoSwingViewSQLIT {
         window.label("errorMessageLabel").requireText(" ");
     }
     
+    @Test
+    @GUITest
+    void testDatabasePersistence() {
+        window.textBox("titleTextBox").enterText("Persistent task SQL");
+        window.checkBox("doneCheckBox").check();
+        window.button("addButton").click();
+        
+        List<ToDo> todosInDb = todoRepository.findAll();
+        assertThat(todosInDb).containsExactly(new ToDo("Persistent task SQL", true));
+        
+        String[] listContents = window.list("todoList").contents();
+        assertThat(listContents).containsExactly(new ToDo("Persistent task SQL", true).toString());
+    }
+    
+    @Test
+    @GUITest
+    void testMultipleOperations() {
+        window.textBox("titleTextBox").enterText("First task");
+        window.checkBox("doneCheckBox").uncheck();
+        window.button("addButton").click();
+        
+        window.textBox("titleTextBox").selectAll();
+        window.textBox("titleTextBox").enterText("Second task");
+        window.checkBox("doneCheckBox").check();
+        window.button("addButton").click();
+        
+        String[] listContents = window.list("todoList").contents();
+        assertThat(listContents).containsExactlyInAnyOrder(
+            new ToDo("First task", false).toString(),
+            new ToDo("Second task", true).toString()
+        );
+        
+        window.list("todoList").selectItem(0);
+        window.button("deleteButton").click();
+        
+        assertThat(window.list("todoList").contents()).hasSize(1);
+    }
+    
 
     
     // helpers
