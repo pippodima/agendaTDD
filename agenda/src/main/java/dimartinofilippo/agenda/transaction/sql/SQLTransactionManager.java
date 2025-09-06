@@ -20,27 +20,31 @@ public class SQLTransactionManager implements TransactionManager {
     @Override
     public <T> T doInTransaction(TransactionCode<T> code) {
         try {
-            connection.setAutoCommit(false);
+            getConnection().setAutoCommit(false);
 
             T result = code.apply(repository);
 
-            connection.commit();
+            getConnection().commit();
 
             return result;
 
         } catch (RuntimeException | SQLException e) {
             try {
-                connection.rollback();
+                getConnection().rollback();
             } catch (SQLException rollbackEx) {
                 throw new RuntimeException("Rollback failed", rollbackEx);
             }
             throw new RuntimeException("Transaction failed", e);
         } finally {
             try {
-                connection.setAutoCommit(true); 
+                getConnection().setAutoCommit(true); 
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to reset auto-commit", e);
             }
         }
     }
+
+	public Connection getConnection() {
+		return connection;
+	}
 }
