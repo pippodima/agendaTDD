@@ -9,8 +9,6 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<name>agenda</name>
-	<!-- FIXME change it to the project's website -->
-	<url>http://www.example.com</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,6 +21,8 @@
 		<testcontainers.version>1.18.3</testcontainers.version>
 		<assertj.swing.version>3.17.1</assertj.swing.version>
 		<failsafe.version>3.3.0</failsafe.version>
+		<picocli.version>4.7.7</picocli.version>
+
 	</properties>
 
 	<dependencyManagement>
@@ -95,7 +95,6 @@
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<version>2.2.224</version>
-			<scope>test</scope>
 		</dependency>
 
 		<!-- TestContainer -->
@@ -136,6 +135,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- picocli -->
+		<dependency>
+			<groupId>info.picocli</groupId>
+			<artifactId>picocli</artifactId>
+			<version>${picocli.version}</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -154,9 +160,11 @@
 						<configuration>
 							<sources>
 								<source>src/it/java</source>
+								<source>src/e2e/java</source>
 							</sources>
 						</configuration>
 					</execution>
+
 				</executions>
 			</plugin>
 
@@ -179,6 +187,21 @@
 							<goal>verify</goal>
 						</goals>
 					</execution>
+					<execution>
+						<id>e2e-tests</id>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<excludes>
+								<exclude>**/*IT.java</exclude>
+							</excludes>
+							<includes>
+								<include>**/*E2E.java</include>
+							</includes>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 
@@ -191,43 +214,6 @@
 					</argLine>
 				</configuration>
 			</plugin>
-
-
-			<!-- automated docker maven 
-			<plugin>
-				<groupId>io.fabric8</groupId>
-				<artifactId>docker-maven-plugin</artifactId>
-				<version>0.27.2</version>
-				<configuration>
-					<images>
-						<image>
-							<name>mongo:4.0.5</name>
-							<run>
-								<ports>
-									<port>27017:27017</port>
-								</ports>
-							</run>
-						</image>
-					</images>
-				</configuration>
-				<executions>
-					<execution>
-						<id>docker:start</id>
-						<phase>pre-integration-test</phase>
-						<goals>
-							<goal>start</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>docker:stop</id>
-						<phase>post-integration-test</phase>
-						<goals>
-							<goal>stop</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
--->
 
 		</plugins>
 
