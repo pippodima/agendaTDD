@@ -13,6 +13,9 @@ import dimartinofilippo.agenda.controller.AgendaController;
 import dimartinofilippo.agenda.repository.ToDoRepository;
 import dimartinofilippo.agenda.repository.mongo.ToDoMongoRepository;
 import dimartinofilippo.agenda.repository.sql.ToDoSQLRepository;
+import dimartinofilippo.agenda.transaction.TransactionManager;
+import dimartinofilippo.agenda.transaction.mongo.MongoTransactionManager;
+import dimartinofilippo.agenda.transaction.sql.SQLTransactionManager;
 import dimartinofilippo.agenda.view.swing.ToDoSwingView;
 
 public class App {
@@ -25,6 +28,7 @@ public class App {
 			public void run() {
 				try {
 					ToDoRepository todoRepository;
+					TransactionManager transactionManager;
 					
 					String dbType = "mongo";
 					if (args.length > 0) {
@@ -48,6 +52,7 @@ public class App {
 						createSqlSchema(dataSource);
 						
 						todoRepository = new ToDoSQLRepository(dataSource);
+						transactionManager = new SQLTransactionManager(todoRepository, dataSource.getConnection());
 						System.out.println("Using SQL database: " + jdbcUrl);
 						
 					} else {
@@ -60,11 +65,12 @@ public class App {
 						String mongoUri = "mongodb://" + mongoHost + ":" + mongoPort;
 						MongoClient mongoClient = MongoClients.create(mongoUri);
 						todoRepository = new ToDoMongoRepository(mongoClient);
+						transactionManager = new MongoTransactionManager(todoRepository);
 						System.out.println("Using MongoDB: " + mongoUri);
 					}
 					
 					ToDoSwingView todoView = new ToDoSwingView();
-					AgendaController agendaController = new AgendaController(todoRepository, todoView);
+					AgendaController agendaController = new AgendaController(transactionManager, todoView);
 					todoView.setAgendaController(agendaController);
 					
 					todoView.setVisible(true);
