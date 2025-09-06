@@ -4,6 +4,7 @@ package dimartinofilippo.agenda.view.swing.sql;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.TestInstance;
 import dimartinofilippo.agenda.controller.AgendaController;
 import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.repository.sql.ToDoSQLRepository;
+import dimartinofilippo.agenda.transaction.sql.SQLTransactionManager;
 import dimartinofilippo.agenda.view.swing.ToDoSwingView;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -34,54 +36,58 @@ class ToDoSwingViewSQLIT {
     private ToDoSwingView todoSwingView;
     private AgendaController agendaController;
     private ToDoSQLRepository todoRepository;
+    private SQLTransactionManager transactionManager;
     private Robot robot;
     
     @BeforeAll
     void setupDatabase() {
         JdbcDataSource ds = new JdbcDataSource();
         ds.setURL("jdbc:h2:mem:agenda_it;MODE=PostgreSQL;DB_CLOSE_DELAY=-1");
-        ds.setUser("sa");
+        ds.setUser("pippo");
         ds.setPassword("");
         this.dataSource = ds;
-        
+
         createSchema();
     }
-    
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws SQLException {
         clearDatabase();
-        
+
         todoRepository = new ToDoSQLRepository(dataSource);
-        
+
+        // Create a single connection for transactions
+        Connection connection = dataSource.getConnection();
+        transactionManager = new SQLTransactionManager(todoRepository, connection);
+
         robot = BasicRobot.robotWithNewAwtHierarchy();
         robot.settings().delayBetweenEvents(50);
-        
-        todoSwingView = GuiActionRunner.execute(() -> {
-            ToDoSwingView view = new ToDoSwingView();
-            return view;
-        });
-        
-        agendaController = new AgendaController(todoRepository, todoSwingView);
+
+        todoSwingView = GuiActionRunner.execute(ToDoSwingView::new);
+
+        // Controller now uses transaction manager
+        agendaController = new AgendaController(transactionManager, todoSwingView);
         todoSwingView.setAgendaController(agendaController);
-        
+
         window = new FrameFixture(robot, todoSwingView);
         window.show();
     }
+
     
     @AfterEach
-    void tearDown() {
-        if (window != null) {
-            window.cleanUp();
-        }
+    void tearDown() throws SQLException {
+        if (window != null) window.cleanUp();
+        if (transactionManager != null) transactionManager.getConnection().close();
     }
+
     
     @Test
     @GUITest
     void testAllToDos() {
         ToDo todo1 = new ToDo("Buy groceries", false);
         ToDo todo2 = new ToDo("Complete project", true);
-        todoRepository.save(todo1);
-        todoRepository.save(todo2);
+        transactionManager.doInTransaction(todoRepository -> todoRepository.save(todo1));
+        transactionManager.doInTransaction(todoRepository -> todoRepository.save(todo2));
         
         GuiActionRunner.execute(() -> agendaController.allToDos());
         
@@ -103,7 +109,7 @@ class ToDoSwingViewSQLIT {
     @Test
     @GUITest
     void testAddButtonError() {
-        todoRepository.save(new ToDo("Existing Task SQL", true));
+    	transactionManager.doInTransaction(todoRepository -> todoRepository.save(new ToDo("Existing Task SQL", true)));
         
         window.textBox("titleTextBox").enterText("Existing Task SQL");
         window.checkBox("doneCheckBox").uncheck();
@@ -178,7 +184,7 @@ class ToDoSwingViewSQLIT {
         window.checkBox("doneCheckBox").check();
         window.button("addButton").click();
         
-        List<ToDo> todosInDb = todoRepository.findAll();
+        List<ToDo> todosInDb = transactionManager.doInTransaction(todoRepository -> todoRepository.findAll());
         assertThat(todosInDb).containsExactly(new ToDo("Persistent task SQL", true));
         
         String[] listContents = window.list("todoList").contents();
