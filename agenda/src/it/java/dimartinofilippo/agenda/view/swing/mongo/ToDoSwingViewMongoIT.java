@@ -25,6 +25,7 @@ import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import dimartinofilippo.agenda.controller.AgendaController;
 import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.repository.mongo.ToDoMongoRepository;
+import dimartinofilippo.agenda.transaction.mongo.MongoTransactionManager;
 import dimartinofilippo.agenda.view.swing.ToDoSwingView;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -38,6 +39,7 @@ class ToDoSwingViewMongoIT {
     private ToDoSwingView todoSwingView;
     private AgendaController agendaController;
     private ToDoMongoRepository todoRepository;
+    private MongoTransactionManager transactionManager;
 	private Robot robot;
     
     @BeforeAll
@@ -57,18 +59,26 @@ class ToDoSwingViewMongoIT {
         mongoClient = MongoClients.create(uri);
         
         todoRepository = new ToDoMongoRepository(mongoClient);
+        transactionManager = new MongoTransactionManager(todoRepository);
+
         
         robot = BasicRobot.robotWithNewAwtHierarchy();
         robot.settings().delayBetweenEvents(50); 
         
-        todoRepository.findAll().forEach(todo -> todoRepository.deleteByTitle(todo.getTitle()));
+        List<ToDo> todos = transactionManager.doInTransaction(repo -> repo.findAll());
+        for (ToDo todo : todos) {
+            transactionManager.<Void>doInTransaction(repo -> {
+                repo.deleteByTitle(todo.getTitle());
+                return null;
+            });
+        }
         
         todoSwingView = GuiActionRunner.execute(() -> {
             ToDoSwingView view = new ToDoSwingView();
             return view;
         });
         
-        agendaController = new AgendaController(todoRepository, todoSwingView);
+        agendaController = new AgendaController(transactionManager, todoSwingView);
         todoSwingView.setAgendaController(agendaController);
         
         window = new FrameFixture(robot, todoSwingView);
@@ -85,19 +95,22 @@ class ToDoSwingViewMongoIT {
         }
     }
     
-    @Test
-    @GUITest
-    void testAllToDos() {
-        ToDo todo1 = new ToDo("Buy groceries", false);
-        ToDo todo2 = new ToDo("Complete project", true);
-        todoRepository.save(todo1);
-        todoRepository.save(todo2);
-        
-        GuiActionRunner.execute(() -> agendaController.allToDos());
-        
-        List<String> listContents = List.of(window.list("todoList").contents());
-        assertThat(listContents).containsExactly(todo1.toString(), todo2.toString());
-    }
+	@Test
+	@GUITest
+	void testAllToDos() {
+		ToDo todo1 = new ToDo("Buy groceries", false);
+		ToDo todo2 = new ToDo("Complete project", true);
+		transactionManager.<Void>doInTransaction(todoRepository -> {
+			todoRepository.save(todo1);
+			todoRepository.save(todo2);
+			return null;
+		});
+
+		GuiActionRunner.execute(() -> agendaController.allToDos());
+
+		List<String> listContents = List.of(window.list("todoList").contents());
+		assertThat(listContents).containsExactly(todo1.toString(), todo2.toString());
+	}
     
     @Test
     @GUITest
@@ -113,7 +126,7 @@ class ToDoSwingViewMongoIT {
     @Test
     @GUITest
     void testAddButtonError() {
-        todoRepository.save(new ToDo("Existing Task", true));
+        transactionManager.doInTransaction(todoRepository -> todoRepository.save(new ToDo("Existing Task", true)));
         
         window.textBox("titleTextBox").enterText("Existing Task");
         window.checkBox("doneCheckBox").uncheck();
