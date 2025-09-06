@@ -24,141 +24,147 @@ import com.mongodb.client.model.Filters;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AgendaSwingAppE2E {
 
-	@SuppressWarnings("rawtypes")
-	public static final GenericContainer mongo = new GenericContainer("mongo:4.0.5").withExposedPorts(27017);
+    @SuppressWarnings({ "rawtypes", "resource" })
+    public static final GenericContainer mongo =
+            new GenericContainer("mongo:4.0.5").withExposedPorts(27017);
 
-	private static final String DB_NAME = "agenda";
-	private static final String COLLECTION_NAME = "todos";
+    private static final String DB_NAME = "agenda";
+    private static final String COLLECTION_NAME = "todos";
 
-	private static Robot robot;
+    private static Robot robot;
+    private MongoClient mongoClient;
+    private FrameFixture window;
 
-	private MongoClient mongoClient;
-	private FrameFixture window;
 
-	@BeforeAll
-	static void setUpRobot() {
-		robot = BasicRobot.robotWithNewAwtHierarchy();
-		robot.settings().delayBetweenEvents(50);
-	}
+    @BeforeAll
+    static void globalSetUp() {
+        mongo.start();
 
-	@AfterAll
-	static void tearDownRobot() {
-		if (robot != null) {
-			robot.cleanUp();
-		}
-	}
+        robot = BasicRobot.robotWithNewAwtHierarchy();
+        robot.settings().delayBetweenEvents(50);
+    }
 
-	@BeforeEach
-	void setUp() {
-		mongo.start();
+    @AfterAll
+    static void globalTearDown() {
+        if (robot != null) {
+            robot.cleanUp();
+        }
+        mongo.stop();
+    }
 
-		String containerIpAddress = mongo.getHost();
-		Integer mappedPort = mongo.getMappedPort(27017);
+    @BeforeEach
+    void setUp() {
+        String containerIpAddress = mongo.getHost();
+        Integer mappedPort = mongo.getMappedPort(27017);
 
-		mongoClient = MongoClients.create("mongodb://" + containerIpAddress + ":" + mappedPort);
-		mongoClient.getDatabase(DB_NAME).drop();
+        mongoClient = MongoClients.create("mongodb://" + containerIpAddress + ":" + mappedPort);
+        mongoClient.getDatabase(DB_NAME).drop();
 
-		addTestTodoToDatabase("todo1", true);
-		addTestTodoToDatabase("todo2", false);
+        addTestTodoToDatabase("todo1", true);
+        addTestTodoToDatabase("todo2", false);
 
-		application("dimartinofilippo.agenda.App")
-				.withArgs("mongo", containerIpAddress, String.valueOf(mappedPort), DB_NAME).start();
+        application("dimartinofilippo.agenda.App")
+                .withArgs("mongo", containerIpAddress, String.valueOf(mappedPort), DB_NAME)
+                .start();
 
-		window = WindowFinder.findFrame(new GenericTypeMatcher<JFrame>(JFrame.class) {
-			@Override
-			protected boolean isMatching(JFrame frame) {
-				return "Agenda - ToDo List".equals(frame.getTitle()) && frame.isShowing();
-			}
-		}).using(robot);
-	}
+        window = WindowFinder.findFrame(new GenericTypeMatcher<JFrame>(JFrame.class) {
+            @Override
+            protected boolean isMatching(JFrame frame) {
+                return "Agenda - ToDo List".equals(frame.getTitle()) && frame.isShowing();
+            }
+        })
+        .withTimeout(5000)
+        .using(robot);
+    }
 
-	@AfterEach
-	void tearDown() {
-		if (mongoClient != null) {
-			mongoClient.close();
-		}
-		mongo.stop();
-		if (window != null) {
-			window.cleanUp();
-		}
-	}
+    @AfterEach
+    void tearDown() {
+        if (mongoClient != null) {
+            mongoClient.close();
+        }
+        if (window != null) {
+            window.cleanUp();
+        }
+    }
 
-	@Test
-	@GUITest
-	void testOnStartAllDBElementsAreShown() {
-		assertThat(window.list().contents()).anySatisfy(e -> assertThat(e).contains(new ToDo("todo1", true).toString()))
-				.anySatisfy(e -> assertThat(e).contains(new ToDo("todo2", false).toString()));
-	}
 
-	@Test
-	@GUITest
-	void testAddButtonSuccess() {
-		window.textBox("titleTextBox").enterText("addButtonSuccess");
-		window.checkBox("doneCheckBox").uncheck();
-		window.button("addButton").click();
+    @Test @GUITest
+    void testOnStartAllDBElementsAreShown() {
+        assertThat(window.list("todoList").contents())
+                .anySatisfy(e -> assertThat(e).contains(new ToDo("todo1", true).toString()))
+                .anySatisfy(e -> assertThat(e).contains(new ToDo("todo2", false).toString()));
+    }
 
-		assertThat(window.list().contents())
-				.anySatisfy(e -> assertThat(e).contains(new ToDo("addButtonSuccess", false).toString()));
-	}
+    @Test @GUITest
+    void testAddButtonSuccess() {
+        window.textBox("titleTextBox").enterText("addButtonSuccess");
+        window.checkBox("doneCheckBox").uncheck();
+        window.button("addButton").click();
 
-	@Test
-	@GUITest
-	void testAddButtonErrorForToDoAlreadyExisting() {
-		window.textBox("titleTextBox").enterText("todo2");
-		window.checkBox("doneCheckBox").uncheck();
-		window.button("addButton").click();
+        assertThat(window.list("todoList").contents())
+                .anySatisfy(e -> assertThat(e).contains(new ToDo("addButtonSuccess", false).toString()));
+    }
 
-		assertThat(window.list("todoList").contents()).containsExactly(new ToDo("todo1", true).toString(),
-				new ToDo("todo2", false).toString());
+    @Test @GUITest
+    void testAddButtonErrorForToDoAlreadyExisting() {
+        window.textBox("titleTextBox").enterText("todo2");
+        window.checkBox("doneCheckBox").uncheck();
+        window.button("addButton").click();
 
-		window.label("errorMessageLabel").requireText("same ToDo already in the agenda: todo2");
+        assertThat(window.list("todoList").contents())
+                .containsExactly(new ToDo("todo1", true).toString(),
+                                 new ToDo("todo2", false).toString());
 
-	}
+        window.label("errorMessageLabel")
+              .requireText("same ToDo already in the agenda: todo2");
+    }
 
-	@Test
-	@GUITest
-	void testAddButtonErrorForToDoWithoutTitle() {
-		window.checkBox("doneCheckBox").uncheck();
-		window.button("addButton").click();
-		assertThat(window.list("todoList").contents()).containsExactly(new ToDo("todo1", true).toString(),
-				new ToDo("todo2", false).toString());
-		window.label("errorMessageLabel").requireText(" ");
-	}
+    @Test @GUITest
+    void testAddButtonErrorForToDoWithoutTitle() {
+        window.checkBox("doneCheckBox").uncheck();
+        window.button("addButton").click();
 
-	@Test
-	@GUITest
-	void testDeleteButtonSuccess() {
-		window.list("todoList").selectItem(0);
-		window.button("deleteButton").click();
+        assertThat(window.list("todoList").contents())
+                .containsExactly(new ToDo("todo1", true).toString(),
+                                 new ToDo("todo2", false).toString());
+        window.label("errorMessageLabel").requireText(" ");
+    }
 
-		assertThat(window.list("todoList").contents()).containsExactly(new ToDo("todo2", false).toString());
-	}
+    @Test @GUITest
+    void testDeleteButtonSuccess() {
+        window.list("todoList").selectItem(0);
+        window.button("deleteButton").click();
 
-	@Test
-	@GUITest
-	void testDeleteButtonError() {
-		window.list("todoList").selectItem(0);
+        assertThat(window.list("todoList").contents())
+                .containsExactly(new ToDo("todo2", false).toString());
+    }
 
-		deleteTestTodoToDatabase("todo1");
-		window.button("deleteButton").click();
-		window.label("errorMessageLabel").requireText("ToDo doesn't exist: todo1");
+    @Test @GUITest
+    void testDeleteButtonError() {
+        window.list("todoList").selectItem(0);
 
-	}
+        deleteTestTodoFromDatabase("todo1");
+        window.button("deleteButton").click();
 
-	@Test
-	@GUITest
-	void testDeleteButtonErrorToDoNotSelected() {
-		window.button("deleteButton").click();
-		window.label("errorMessageLabel").requireText(" ");
-	}
+        window.label("errorMessageLabel")
+              .requireText("ToDo doesn't exist: todo1");
+    }
 
-	// helper
-	private void addTestTodoToDatabase(String title, boolean done) {
-		mongoClient.getDatabase(DB_NAME).getCollection(COLLECTION_NAME)
-				.insertOne(new Document().append("title", title).append("done", done));
-	}
+    @Test @GUITest
+    void testDeleteButtonErrorToDoNotSelected() {
+        window.button("deleteButton").click();
+        window.label("errorMessageLabel").requireText(" ");
+    }
 
-	private void deleteTestTodoToDatabase(String title) {
-		mongoClient.getDatabase(DB_NAME).getCollection(COLLECTION_NAME).deleteOne(Filters.eq("title", title));
-	}
+    // helpers
+
+    private void addTestTodoToDatabase(String title, boolean done) {
+        mongoClient.getDatabase(DB_NAME).getCollection(COLLECTION_NAME)
+                .insertOne(new Document().append("title", title).append("done", done));
+    }
+
+    private void deleteTestTodoFromDatabase(String title) {
+        mongoClient.getDatabase(DB_NAME).getCollection(COLLECTION_NAME)
+                .deleteOne(Filters.eq("title", title));
+    }
 }
