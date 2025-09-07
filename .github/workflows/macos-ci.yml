@@ -1,4 +1,4 @@
-name: Java CI with Maven and Docker in macOS
+name: Java CI with Maven and Docker on macOS
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     runs-on: macos-latest
-    name: Build in macOS
+    name: Build on macOS
 
     steps:
       - uses: actions/checkout@v4
@@ -18,30 +18,37 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Install Colima and Docker CLI
+        run: |
+          brew install colima docker
+          colima start
+
+      - name: Check Docker
+        run: docker version
+
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml', '**/*.yml') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2-
 
-      - name: Check Docker
-        run: docker --version
-
-      - name: Start Database Containers
+      - name: Start MongoDB
         run: |
-          docker run --name postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:13
           docker run --name mongo -p 27017:27017 -d mongo:4.0.5
-          # Wait for containers to be ready
-          sleep 10
+          sleep 15
           docker ps
 
-      - name: Build with Maven
-        run: mvn clean verify
+      - name: Install xvfb
+        run: brew install XQuartz
+
+      - name: Build and test with Maven
+        run: xvfb-run mvn clean verify
         working-directory: agenda
 
-      - name: Stop Database Containers
+      - name: Stop MongoDB
         if: always()
         run: |
-          docker stop postgres mongo || true
-          docker rm postgres mongo || true
+          docker stop mongo || true
+          docker rm mongo || true
+          colima stop
