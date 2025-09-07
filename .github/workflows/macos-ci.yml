@@ -19,9 +19,6 @@ jobs:
         distribution: temurin
         java-version: 17
     
-    - name: Install Docker
-      uses: docker-practice/actions-setup-docker@master
-    
     - name: Cache Maven packages
       uses: actions/cache@v4
       with:
@@ -29,6 +26,36 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml', '**/*.yml') }}
         restore-keys: ${{ runner.os }}-m2-
     
+    - name: Start Docker
+      run: |
+        # Install Docker using Homebrew
+        brew install --cask docker
+        # Start Docker Desktop
+        sudo /Applications/Docker.app/Contents/MacOS/Docker --unattended --install-privileged-components
+        open -a Docker
+        # Wait for Docker to be ready
+        while ! docker system info > /dev/null 2>&1; do
+          echo "Waiting for Docker to start..."
+          sleep 5
+        done
+        echo "Docker is ready!"
+    
+    - name: Start Database Containers
+      run: |
+        # Start PostgreSQL
+        docker run --name postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:13
+        # Start MongoDB
+        docker run --name mongo -p 27017:27017 -d mongo:4.0.5
+        # Wait for containers to be ready
+        sleep 10
+        docker ps
+    
     - name: Build with Maven
       run: mvn clean verify
       working-directory: agenda
+    
+    - name: Stop Database Containers
+      if: always()
+      run: |
+        docker stop postgres mongo || true
+        docker rm postgres mongo || true
