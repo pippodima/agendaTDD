@@ -27,5 +27,5 @@ jobs:
         restore-keys: ${{ runner.os }}-m2-
     
     - name: Build with Maven (skip TestContainers profile)
-      run: mvn clean verify -Pskip-testcontainers
+      run: mvn clean verify -Pskip-testcontainers -Pskip-mongo-it
       working-directory: agenda
