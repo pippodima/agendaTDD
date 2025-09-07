@@ -42,7 +42,9 @@ class AgendaControllerTest {
 
         // Default: delegate to real repository mock inside transaction
         when(transactionManager.doInTransaction(any())).thenAnswer(invocation -> {
-            var code = invocation.getArgument(0, dimartinofilippo.agenda.transaction.TransactionCode.class);
+            @SuppressWarnings("unchecked")
+            dimartinofilippo.agenda.transaction.TransactionCode<Object> code =
+                    invocation.getArgument(0, dimartinofilippo.agenda.transaction.TransactionCode.class);
             return code.apply(todoRepository);
         });
     }
