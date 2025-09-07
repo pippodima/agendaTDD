@@ -15,6 +15,7 @@ import dimartinofilippo.agenda.controller.AgendaController;
 import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.repository.ToDoRepository;
 import dimartinofilippo.agenda.repository.mongo.ToDoMongoRepository;
+import dimartinofilippo.agenda.transaction.mongo.MongoTransactionManager;
 import dimartinofilippo.agenda.view.ToDoView;
 
 
@@ -25,6 +26,7 @@ public class AgendaControllerMongoIT {
 	private ToDoView todoView;
 	private ToDoRepository todoRepository;
 	private AgendaController agendaController;
+	private MongoTransactionManager transactionManager;
 	
 	@BeforeEach
 	void setUp() {
@@ -36,14 +38,16 @@ public class AgendaControllerMongoIT {
 			todoRepository.deleteByTitle(todo.getTitle());
 		}
 		
-		agendaController = new AgendaController(todoRepository, todoView);
+		transactionManager = new MongoTransactionManager(todoRepository);
+		
+		agendaController = new AgendaController(transactionManager, todoView);
 		
 	}
 	
 	@Test
 	void testAllToDo() {
 		ToDo todo = new ToDo("task1", true);
-		todoRepository.save(todo);
+		transactionManager.doInTransaction(todoRepository -> todoRepository.save(todo));
 		agendaController.allToDos();
 		verify(todoView).showAllToDos(asList(todo));
 	}
@@ -58,7 +62,7 @@ public class AgendaControllerMongoIT {
 	@Test
 	void testDeleteToDo() {
 		ToDo todo = new ToDo("task1", true);
-		todoRepository.save(todo);
+		transactionManager.doInTransaction(todoRepository -> todoRepository.save(todo));
 		agendaController.deleteToDo(todo);
 		verify(todoView).removedToDo(todo);
 	}

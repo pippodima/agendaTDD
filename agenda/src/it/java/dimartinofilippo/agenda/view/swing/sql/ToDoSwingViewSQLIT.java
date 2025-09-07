@@ -1,0 +1,245 @@
+package dimartinofilippo.agenda.view.swing.sql;
+
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.List;
+
+import javax.sql.DataSource;
+
+import org.assertj.swing.annotation.GUITest;
+import org.assertj.swing.core.BasicRobot;
+import org.assertj.swing.core.Robot;
+import org.assertj.swing.edt.GuiActionRunner;
+import org.assertj.swing.fixture.FrameFixture;
+import org.h2.jdbcx.JdbcDataSource;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+
+import dimartinofilippo.agenda.controller.AgendaController;
+import dimartinofilippo.agenda.model.ToDo;
+import dimartinofilippo.agenda.repository.sql.ToDoSQLRepository;
+import dimartinofilippo.agenda.transaction.sql.SQLTransactionManager;
+import dimartinofilippo.agenda.view.swing.ToDoSwingView;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class ToDoSwingViewSQLIT {
+    
+    private DataSource dataSource;
+    private FrameFixture window;
+    private ToDoSwingView todoSwingView;
+    private AgendaController agendaController;
+    private ToDoSQLRepository todoRepository;
+    private SQLTransactionManager transactionManager;
+    private Robot robot;
+    
+    @BeforeAll
+    void setupDatabase() {
+        JdbcDataSource ds = new JdbcDataSource();
+        ds.setURL("jdbc:h2:mem:agenda_it;MODE=PostgreSQL;DB_CLOSE_DELAY=-1");
+        ds.setUser("pippo");
+        ds.setPassword("");
+        this.dataSource = ds;
+
+        createSchema();
+    }
+
+    @BeforeEach
+    void setUp() throws SQLException {
+        clearDatabase();
+
+        todoRepository = new ToDoSQLRepository(dataSource);
+
+        // Create a single connection for transactions
+        Connection connection = dataSource.getConnection();
+        transactionManager = new SQLTransactionManager(todoRepository, connection);
+
+        robot = BasicRobot.robotWithNewAwtHierarchy();
+        robot.settings().delayBetweenEvents(50);
+
+        todoSwingView = GuiActionRunner.execute(ToDoSwingView::new);
+
+        // Controller now uses transaction manager
+        agendaController = new AgendaController(transactionManager, todoSwingView);
+        todoSwingView.setAgendaController(agendaController);
+
+        window = new FrameFixture(robot, todoSwingView);
+        window.show();
+    }
+
+    
+    @AfterEach
+    void tearDown() throws SQLException {
+        if (window != null) window.cleanUp();
+        if (transactionManager != null) transactionManager.getConnection().close();
+    }
+
+    
+    @Test
+    @GUITest
+    void testAllToDos() {
+        ToDo todo1 = new ToDo("Buy groceries", false);
+        ToDo todo2 = new ToDo("Complete project", true);
+        transactionManager.doInTransaction(todoRepository -> todoRepository.save(todo1));
+        transactionManager.doInTransaction(todoRepository -> todoRepository.save(todo2));
+        
+        GuiActionRunner.execute(() -> agendaController.allToDos());
+        
+        List<String> listContents = List.of(window.list("todoList").contents());
+        assertThat(listContents).containsExactly(todo1.toString(), todo2.toString());
+    }
+    
+    @Test
+    @GUITest
+    void testAddButtonSuccess() {
+        window.textBox("titleTextBox").enterText("Learn Java SQL");
+        window.checkBox("doneCheckBox").uncheck();
+        window.button("addButton").click();
+        
+        String[] listContents = window.list("todoList").contents();
+        assertThat(listContents).containsExactly(new ToDo("Learn Java SQL", false).toString());
+    }
+    
+    @Test
+    @GUITest
+    void testAddButtonError() {
+    	transactionManager.doInTransaction(todoRepository -> todoRepository.save(new ToDo("Existing Task SQL", true)));
+        
+        window.textBox("titleTextBox").enterText("Existing Task SQL");
+        window.checkBox("doneCheckBox").uncheck();
+        window.button("addButton").click();
+        
+        assertThat(window.list("todoList").contents()).isEmpty();
+        
+        window.label("errorMessageLabel")
+            .requireText("same ToDo already in the agenda: Existing Task SQL");
+    }
+    
+    @Test
+    @GUITest
+    void testDeleteButtonSuccess() {
+        GuiActionRunner.execute(() -> agendaController.addToDo(new ToDo("Task to remove", false)));
+        
+        window.list("todoList").selectItem(0);
+        window.button("deleteButton").click();
+        
+        assertThat(window.list("todoList").contents()).isEmpty();
+    }
+    
+    @Test
+    @GUITest
+    void testDeleteButtonError() {
+        ToDo nonExistentTodo = new ToDo("Non-existent task SQL", false);
+        GuiActionRunner.execute(() -> todoSwingView.getListTodosModel().addElement(nonExistentTodo));
+        
+        window.list("todoList").selectItem(0);
+        window.button("deleteButton").click();
+        
+        String[] listContents = window.list("todoList").contents();
+        assertThat(listContents).containsExactly(nonExistentTodo.toString());
+        
+        window.label("errorMessageLabel")
+            .requireText("ToDo doesn't exist: Non-existent task SQL");
+    }
+    
+    @Test
+    @GUITest
+    void testAddAndDeleteFlow() {
+        window.textBox("titleTextBox").enterText("Complete flow test SQL");
+        window.checkBox("doneCheckBox").check();
+        window.button("addButton").click();
+        
+        String[] listContents = window.list("todoList").contents();
+        assertThat(listContents).containsExactly(new ToDo("Complete flow test SQL", true).toString());
+        
+        window.list("todoList").selectItem(0);
+        window.button("deleteButton").click();
+        
+        assertThat(window.list("todoList").contents()).isEmpty();
+    }
+    
+    @Test
+    @GUITest
+    void testFormResetAfterSuccessfulAdd() {
+        window.textBox("titleTextBox").enterText("Test task SQL");
+        window.checkBox("doneCheckBox").check();
+        window.button("addButton").click();
+        
+        window.textBox("titleTextBox").requireText("Test task SQL");
+        window.checkBox("doneCheckBox").requireSelected();
+        
+        window.label("errorMessageLabel").requireText(" ");
+    }
+    
+    @Test
+    @GUITest
+    void testDatabasePersistence() {
+        window.textBox("titleTextBox").enterText("Persistent task SQL");
+        window.checkBox("doneCheckBox").check();
+        window.button("addButton").click();
+        
+        List<ToDo> todosInDb = transactionManager.doInTransaction(todoRepository -> todoRepository.findAll());
+        assertThat(todosInDb).containsExactly(new ToDo("Persistent task SQL", true));
+        
+        String[] listContents = window.list("todoList").contents();
+        assertThat(listContents).containsExactly(new ToDo("Persistent task SQL", true).toString());
+    }
+    
+    @Test
+    @GUITest
+    void testMultipleOperations() {
+        window.textBox("titleTextBox").enterText("First task");
+        window.checkBox("doneCheckBox").uncheck();
+        window.button("addButton").click();
+        
+        window.textBox("titleTextBox").selectAll();
+        window.textBox("titleTextBox").enterText("Second task");
+        window.checkBox("doneCheckBox").check();
+        window.button("addButton").click();
+        
+        String[] listContents = window.list("todoList").contents();
+        assertThat(listContents).containsExactlyInAnyOrder(
+            new ToDo("First task", false).toString(),
+            new ToDo("Second task", true).toString()
+        );
+        
+        window.list("todoList").selectItem(0);
+        window.button("deleteButton").click();
+        
+        assertThat(window.list("todoList").contents()).hasSize(1);
+    }
+    
+
+    
+    // helpers
+  
+    
+    private void createSchema() {
+        try (Connection c = dataSource.getConnection(); 
+             Statement st = c.createStatement()) {
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS todos (" +
+                           "title VARCHAR(255) PRIMARY KEY," +
+                           "done BOOLEAN NOT NULL" +
+                           ")");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create schema", e);
+        }
+    }
+    
+    private void clearDatabase() {
+        try (Connection c = dataSource.getConnection(); 
+             Statement st = c.createStatement()) {
+            st.executeUpdate("DELETE FROM todos");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to clear database", e);
+        }
+    }
+    
+    
+}

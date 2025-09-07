@@ -19,6 +19,7 @@ import dimartinofilippo.agenda.controller.AgendaController;
 import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.repository.ToDoRepository;
 import dimartinofilippo.agenda.repository.sql.ToDoSQLRepository;
+import dimartinofilippo.agenda.transaction.sql.SQLTransactionManager;
 import dimartinofilippo.agenda.view.ToDoView;
 
 public class AgendaControllerSQLIT {
@@ -26,6 +27,7 @@ public class AgendaControllerSQLIT {
     private ToDoView todoView;
     private ToDoRepository todoRepository;
     private AgendaController agendaController;
+    private SQLTransactionManager transactionManager;
 
     private DataSource dataSource;
 
@@ -53,15 +55,18 @@ public class AgendaControllerSQLIT {
                 )
             """);
         }
+        
+        Connection connection = dataSource.getConnection();
+        transactionManager = new SQLTransactionManager(todoRepository, connection);
 
-        agendaController = new AgendaController(todoRepository, todoView);
+        agendaController = new AgendaController(transactionManager, todoView);
     }
 
 
     @Test
     void testAllToDos() {
         ToDo todo = new ToDo("task1", true);
-        todoRepository.save(todo);
+        transactionManager.doInTransaction(todoRepository -> todoRepository.save(todo));
 
         agendaController.allToDos();
 
@@ -79,7 +84,7 @@ public class AgendaControllerSQLIT {
     @Test
     void testDeleteToDo() {
         ToDo todo = new ToDo("task1", true);
-        todoRepository.save(todo);
+        transactionManager.doInTransaction(todoRepository -> todoRepository.save(todo));
 
         agendaController.deleteToDo(todo);
 
