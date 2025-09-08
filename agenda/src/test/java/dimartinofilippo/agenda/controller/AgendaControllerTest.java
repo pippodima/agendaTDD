@@ -9,16 +9,17 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.repository.ToDoRepository;
 import dimartinofilippo.agenda.transaction.TransactionManager;
 import dimartinofilippo.agenda.view.ToDoView;
 
+@ExtendWith(MockitoExtension.class)
 class AgendaControllerTest {
 
     private static final String TODO_TITLE = "test";
@@ -38,9 +39,6 @@ class AgendaControllerTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-
-        // Default: delegate to real repository mock inside transaction
         when(transactionManager.doInTransaction(any())).thenAnswer(invocation -> {
             @SuppressWarnings("unchecked")
             dimartinofilippo.agenda.transaction.TransactionCode<Object> code =
@@ -67,7 +65,7 @@ class AgendaControllerTest {
 
         agendaController.addToDo(todo);
 
-        var inOrder = Mockito.inOrder(todoRepository, todoView);
+        var inOrder = inOrder(todoRepository, todoView);
         inOrder.verify(todoRepository).save(todo);
         inOrder.verify(todoView).addedToDo(todo);
     }
@@ -93,7 +91,7 @@ class AgendaControllerTest {
 
         agendaController.deleteToDo(todoToDelete);
 
-        var inOrder = Mockito.inOrder(todoRepository, todoView);
+        var inOrder = inOrder(todoRepository, todoView);
         inOrder.verify(todoRepository).deleteByTitle(TODO_TITLE);
         inOrder.verify(todoView).removedToDo(todoToDelete);
     }
