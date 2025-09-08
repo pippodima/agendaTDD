@@ -1,14 +1,10 @@
 package dimartinofilippo.agenda.repository.mongo;
 
 import org.bson.Document;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
+import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.containers.MongoDBContainer;
-
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -28,27 +24,27 @@ import java.util.stream.StreamSupport;
 class ToDoMongoRepositoryTestcontainersIT {
 
     @Container
-    public static final MongoDBContainer mongo =
-            new MongoDBContainer("mongo:4.0.5");
+    static final MongoDBContainer mongo = new MongoDBContainer("mongo:4.0.5");
 
     private MongoClient client;
     private ToDoMongoRepository todoRepository;
     private MongoCollection<Document> todoCollection;
 
-    @BeforeEach
-    void setup() {
-    	String uri = "mongodb://" + mongo.getHost() + ":" + mongo.getMappedPort(27017);
-    	client = MongoClients.create(uri);
-
+    @BeforeAll
+    void initClient() {
+        client = MongoClients.create(mongo.getReplicaSetUrl()); // optimized connection
         MongoDatabase database = client.getDatabase(ToDoMongoRepository.AGENDA_DB_NAME);
-        database.drop();
         todoCollection = database.getCollection(ToDoMongoRepository.TODO_COLLECTION_NAME);
-
         todoRepository = new ToDoMongoRepository(client);
     }
 
-    @AfterEach
-    void tearDown() {
+    @BeforeEach
+    void cleanDatabase() {
+        client.getDatabase(ToDoMongoRepository.AGENDA_DB_NAME).drop();
+    }
+
+    @AfterAll
+    void closeClient() {
         client.close();
     }
 
@@ -56,63 +52,64 @@ class ToDoMongoRepositoryTestcontainersIT {
     void testContainerConnection() {
         assertThat(todoCollection.countDocuments()).isZero();
     }
-    
+
     @Test
     void testFindAll() {
-    	addTestToDoToDatabase("todo1", true);
-    	addTestToDoToDatabase("todo2", false);
-    	
-    	assertThat(todoRepository.findAll())
-    		.containsExactly(
-    				new ToDo("todo1", true),
-    				new ToDo("todo2", false)
-    				);
-    	
+        addTestToDoToDatabase("todo1", true);
+        addTestToDoToDatabase("todo2", false);
+
+        assertThat(todoRepository.findAll())
+            .containsExactly(
+                new ToDo("todo1", true),
+                new ToDo("todo2", false)
+            );
     }
-    
+
     @Test
     void testFindByTitle() {
-    	addTestToDoToDatabase("todo1", true);
-    	addTestToDoToDatabase("todo2", false);
+        addTestToDoToDatabase("todo1", true);
+        addTestToDoToDatabase("todo2", false);
 
-    	assertThat(todoRepository.findByTitle("todo2"))
-    		.contains(new ToDo("todo2", false));
+        assertThat(todoRepository.findByTitle("todo2"))
+            .contains(new ToDo("todo2", false));
     }
-    
+
+    @Test
+    void testFindByTitleNotFound() {
+        assertThat(todoRepository.findByTitle("does-not-exist")).isEmpty();
+    }
+
     @Test
     void testSave() {
-    	ToDo todo = new ToDo("todo", true);
-    	todoRepository.save(todo);
-    	
-    	assertThat(readAllTodosFromDatabase())
-    		.containsExactly(todo);
+        ToDo todo = new ToDo("todo", true);
+        todoRepository.save(todo);
+
+        assertThat(readAllTodosFromDatabase())
+            .containsExactly(todo);
     }
-    
+
     @Test
     void testDeleteByTitle() {
-    	addTestToDoToDatabase("todo1", true);
-    	todoRepository.deleteByTitle("todo1");
-    	
-    	assertThat(readAllTodosFromDatabase()).isEmpty();
+        addTestToDoToDatabase("todo1", true);
+        todoRepository.deleteByTitle("todo1");
+
+        assertThat(readAllTodosFromDatabase()).isEmpty();
     }
-    
+
     // helpers
-    
+
     private void addTestToDoToDatabase(String title, boolean done) {
         todoCollection.insertOne(
-                new Document()
-                        .append("title", title)
-                        .append("done", done));
+            new Document()
+                .append("title", title)
+                .append("done", done)
+        );
     }
-    
+
     private List<ToDo> readAllTodosFromDatabase() {
         return StreamSupport
-                .stream(todoCollection.find().spliterator(), false)
-                .map(d -> new ToDo("" + d.get("title"), (Boolean) d.get("done")))
-                .collect(Collectors.toList());
+            .stream(todoCollection.find().spliterator(), false)
+            .map(d -> new ToDo(d.getString("title"), d.getBoolean("done")))
+            .collect(Collectors.toList());
     }
-
-
-    
-    
 }
