@@ -1,140 +1,140 @@
 package dimartinofilippo.agenda.repository.mongo;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.net.InetSocketAddress;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.util.Optional;
 
 import org.bson.Document;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import org.bson.conversions.Bson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import dimartinofilippo.agenda.model.ToDo;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ExtendWith(MockitoExtension.class)
 public class ToDoMongoRepositoryTest {
-	
-	
-	private static MongoServer server;
-	private static InetSocketAddress serverAddress;
-	
-	private MongoClient client;
-	private ToDoMongoRepository todoRepository;
-	private MongoCollection<Document> todoCollection;
-	
-	@BeforeAll
-	void setupServer() {
-		server = new MongoServer(new MemoryBackend());
-		serverAddress = server.bind();
-		
-	}
-	
-	@AfterAll 
-	void shutdownServer(){
-		server.shutdown();
-	}
-	
+
+    @Mock
+    private MongoClient mockClient;
+    
+    @Mock
+    private MongoDatabase mockDatabase;
+    
+    @Mock
+    private MongoCollection<Document> mockCollection;
+    
+    @Mock
+    private FindIterable<Document> mockFindIterable;
+    
+    private ToDoMongoRepository todoRepository;
+
     @BeforeEach
     void setup() {
-        String uri = "mongodb://" + serverAddress.getHostName() + ":" + serverAddress.getPort();
-        client = MongoClients.create(uri);
-
-        MongoDatabase database = client.getDatabase(ToDoMongoRepository.AGENDA_DB_NAME);
-        database.drop();
+        when(mockClient.getDatabase(ToDoMongoRepository.AGENDA_DB_NAME))
+            .thenReturn(mockDatabase);
+        when(mockDatabase.getCollection(ToDoMongoRepository.TODO_COLLECTION_NAME))
+            .thenReturn(mockCollection);
         
-        todoRepository = new ToDoMongoRepository(client);
-        todoCollection = database.getCollection(ToDoMongoRepository.TODO_COLLECTION_NAME);
-        
-        assertThat(todoCollection.countDocuments()).isZero();
+        todoRepository = new ToDoMongoRepository(mockClient);
+    }
 
-    }
-    
-    @AfterEach
-    void tearDownClient() {
-    	client.close();
-    }
-    
     @Test
-    public void testFindAllWhenDBIsEmpty() {
-    	assertThat(todoRepository.findAll().isEmpty());
+    void testFindAllWhenDBIsEmpty() {
+        // Arrange
+        when(mockCollection.find()).thenReturn(mockFindIterable);
+        when(mockFindIterable.spliterator()).thenReturn(Collections.<Document>emptyList().spliterator());
+        
+        // Act
+        List<ToDo> result = todoRepository.findAll();
+        
+        // Assert
+        assertThat(result).isEmpty();
     }
-    
+
     @Test
-    public void testFindAllWhenDBIsNotEmpty() {
-    	addTestToDoToDatabase("todo1", true);
-    	addTestToDoToDatabase("todo2", false);
-    	
-    	assertThat(todoRepository.findAll()).containsExactly(
-    			new ToDo("todo1", true),
-    			new ToDo("todo2", false)
-    			);
-    	
+    void testFindAllWhenDBIsNotEmpty() {
+        // Arrange
+        Document doc1 = new Document("title", "todo1").append("done", true);
+        Document doc2 = new Document("title", "todo2").append("done", false);
+        List<Document> documents = Arrays.asList(doc1, doc2);
+        
+        when(mockCollection.find()).thenReturn(mockFindIterable);
+        when(mockFindIterable.spliterator()).thenReturn(documents.spliterator());
+        
+        // Act
+        List<ToDo> result = todoRepository.findAll();
+        
+        // Assert
+        assertThat(result).containsExactly(
+            new ToDo("todo1", true),
+            new ToDo("todo2", false)
+        );
     }
-    
-    
+
     @Test
     void testFindByTitleNotFound() {
-        assertThat(todoRepository.findByTitle("nonexistent")).isEmpty();
+        // Arrange
+        when(mockCollection.find(any(Bson.class))).thenReturn(mockFindIterable);
+        when(mockFindIterable.first()).thenReturn(null);
+
+        // Act
+        Optional<ToDo> result = todoRepository.findByTitle("nonexistent");
+
+        // Assert
+        assertThat(result).isEmpty();
     }
 
     @Test
     void testFindByTitleFound() {
-        addTestToDoToDatabase("task1", false);
-        addTestToDoToDatabase("task2", true);
-
-        assertThat(todoRepository.findByTitle("task2"))
+        // Arrange
+        Document doc = new Document("title", "task2").append("done", true);
+        
+        when(mockCollection.find(any(Bson.class))).thenReturn(mockFindIterable);
+        when(mockFindIterable.first()).thenReturn(doc);
+        
+        // Act
+        Optional<ToDo> result = todoRepository.findByTitle("task2");
+        
+        // Assert
+        assertThat(result)
             .isPresent()
             .contains(new ToDo("task2", true));
     }
 
-    
     @Test
     void testSave() {
+        // Arrange
         ToDo todo = new ToDo("task1", false);
-        todoRepository.save(todo);
-
-        assertThat(readAllToDosFromDatabase())
-            .containsExactly(todo);
+        Document expectedDocument = new Document("title", "task1").append("done", false);
+        
+        // Act
+        ToDo result = todoRepository.save(todo);
+        
+        // Assert
+        assertThat(result).isEqualTo(todo);
+        verify(mockCollection).insertOne(expectedDocument);
     }
 
     @Test
     void testDelete() {
-        addTestToDoToDatabase("task1", false);
+        // Act
         todoRepository.deleteByTitle("task1");
-
-        assertThat(readAllToDosFromDatabase())
-            .isEmpty();
+        
+        // Assert
+        verify(mockCollection).deleteOne(any(Bson.class));
     }
-    
-
-    // helpers
-    private void addTestToDoToDatabase(String title, boolean done) {
-        todoCollection.insertOne(
-            new Document()
-                .append("title", title)
-                .append("done", done)
-        );
-    }
-    
-    private List<ToDo> readAllToDosFromDatabase() {
-        return StreamSupport.stream(todoCollection.find().spliterator(), false)
-                .map(d -> new ToDo(d.getString("title"), d.getBoolean("done", false)))
-                .collect(Collectors.toList());
-    }
-
-
-
 }
