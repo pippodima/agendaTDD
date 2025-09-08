@@ -1,11 +1,13 @@
 package dimartinofilippo.agenda.repository.sql;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
@@ -127,4 +129,45 @@ class ToDoSQLRepositoryTest {
         verify(preparedStatement).setString(1, "task1");
         verify(preparedStatement).executeUpdate();
     }
+    
+    @Test
+    void save_whenSQLException_thenWrapsInRuntimeException() throws Exception {
+        when(connection.prepareStatement(anyString())).thenThrow(new SQLException("boom"));
+
+        ToDo todo = new ToDo("x", true);
+
+        assertThatThrownBy(() -> sqlRepository.save(todo))
+                .isInstanceOf(RuntimeException.class)
+                .hasCauseInstanceOf(SQLException.class);
+    }
+
+    @Test
+    void findByTitle_whenSQLException_thenWrapsInRuntimeException() throws Exception {
+        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
+        when(preparedStatement.executeQuery()).thenThrow(new SQLException("fail"));
+
+        assertThatThrownBy(() -> sqlRepository.findByTitle("test"))
+                .isInstanceOf(RuntimeException.class)
+                .hasCauseInstanceOf(SQLException.class);
+    }
+
+    @Test
+    void findAll_whenSQLException_thenWrapsInRuntimeException() throws Exception {
+        when(connection.prepareStatement(anyString())).thenThrow(new SQLException("nope"));
+
+        assertThatThrownBy(() -> sqlRepository.findAll())
+                .isInstanceOf(RuntimeException.class)
+                .hasCauseInstanceOf(SQLException.class);
+    }
+
+    @Test
+    void deleteByTitle_whenSQLException_thenWrapsInRuntimeException() throws Exception {
+        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
+        doThrow(new SQLException("bad delete")).when(preparedStatement).executeUpdate();
+
+        assertThatThrownBy(() -> sqlRepository.deleteByTitle("test"))
+                .isInstanceOf(RuntimeException.class)
+                .hasCauseInstanceOf(SQLException.class);
+    }
+
 }
