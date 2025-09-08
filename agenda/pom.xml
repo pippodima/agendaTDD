@@ -7,7 +7,6 @@
 	<groupId>dimartinofilippo</groupId>
 	<artifactId>agenda</artifactId>
 	<version>1.0-SNAPSHOT</version>
-
 	<name>agenda</name>
 
 	<properties>
@@ -15,14 +14,17 @@
 		<maven.compiler.release>17</maven.compiler.release>
 
 		<mockito.version>5.7.0</mockito.version>
-		<mongo.version>3.12.14</mongo.version>
-		<mongo.java.server.version>1.11.0</mongo.java.server.version>
+		<mongo.version>4.11.1</mongo.version>
+		<mongo.java.server.version>1.44.0</mongo.java.server.version>
 		<assertj.version>3.24.2</assertj.version>
-		<testcontainers.version>1.18.3</testcontainers.version>
+		<testcontainers.version>1.19.3</testcontainers.version>
 		<assertj.swing.version>3.17.1</assertj.swing.version>
-		<failsafe.version>3.3.0</failsafe.version>
+		<surefire.version>3.2.5</surefire.version>
+		<failsafe.version>3.2.5</failsafe.version>
 		<picocli.version>4.7.7</picocli.version>
-
+		<jacoco.version>0.8.12</jacoco.version>
+		<postgresql.version>42.7.4</postgresql.version>
+		<h2.version>2.2.224</h2.version>
 	</properties>
 
 	<dependencyManagement>
@@ -38,8 +40,6 @@
 	</dependencyManagement>
 
 	<dependencies>
-
-
 		<!-- JUnit 5 -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -60,10 +60,10 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- MongoDB Java Driver -->
+		<!-- MongoDB Driver -->
 		<dependency>
 			<groupId>org.mongodb</groupId>
-			<artifactId>mongo-java-driver</artifactId>
+			<artifactId>mongodb-driver-sync</artifactId>
 			<version>${mongo.version}</version>
 		</dependency>
 
@@ -75,7 +75,7 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Assertj -->
+		<!-- AssertJ -->
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
@@ -90,36 +90,33 @@
 			<version>${assertj.swing.version}</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- H2 database for tests -->
+
+		<!-- H2 Database for tests -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<version>2.2.224</version>
+			<version>${h2.version}</version>
 		</dependency>
 
-		<!-- TestContainer -->
+		<!-- TestContainers -->
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>testcontainers</artifactId>
 			<version>${testcontainers.version}</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>junit-jupiter</artifactId>
 			<version>${testcontainers.version}</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>mongodb</artifactId>
 			<version>${testcontainers.version}</version>
 			<scope>test</scope>
 		</dependency>
-
-		<!-- Testcontainers: PostgreSQL -->
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>postgresql</artifactId>
@@ -127,57 +124,109 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- PostgreSQL JDBC driver -->
+		<!-- PostgreSQL JDBC -->
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>42.7.4</version>
-			<scope>runtime</scope>
+			<version>${postgresql.version}</version>
 		</dependency>
 
-		<!-- picocli -->
+		<!-- Picocli -->
 		<dependency>
 			<groupId>info.picocli</groupId>
 			<artifactId>picocli</artifactId>
 			<version>${picocli.version}</version>
 		</dependency>
-
 	</dependencies>
 
 	<build>
 		<plugins>
+			<!-- Maven Compiler Plugin -->
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>3.0.0</version>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.12.1</version>
+				<configuration>
+					<release>${maven.compiler.release}</release>
+				</configuration>
+			</plugin>
+
+			<!-- JaCoCo Plugin -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<configuration>
+					<excludes>
+						<exclude>dimartinofilippo/agenda/App.class</exclude>
+						<exclude>dimartinofilippo/agenda/model/ToDo.class</exclude>
+						<exclude>**/*Generated*.class</exclude>
+						<exclude>**/dto/**</exclude>
+						<exclude>**/config/**</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
-						<id>add-test-source</id>
-						<phase>generate-test-sources</phase>
+						<id>prepare-agent</id>
+						<phase>initialize</phase>
 						<goals>
-							<goal>add-test-source</goal>
+							<goal>prepare-agent</goal>
 						</goals>
 						<configuration>
-							<sources>
-								<source>src/it/java</source>
-								<source>src/e2e/java</source>
-							</sources>
+							<propertyName>jacocoArgLine</propertyName>
 						</configuration>
 					</execution>
-
+					<execution>
+						<id>prepare-agent-integration</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>prepare-agent-integration</goal>
+						</goals>
+						<configuration>
+							<propertyName>jacocoArgLineIT</propertyName>
+						</configuration>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report-integration</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report-integration</goal>
+						</goals>
+					</execution>
 				</executions>
 			</plugin>
 
+			<!-- Maven Surefire Plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire.version}</version>
+				<configuration>
+					<argLine>${jacocoArgLine} --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+					<includes>
+						<include>**/*Test.java</include>
+					</includes>
+					<excludes>
+						<exclude>**/*IT.java</exclude>
+						<exclude>**/*E2E.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
 
-			<!-- failsafe plugin for testcontainers -->
+			<!-- Maven Failsafe Plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>${failsafe.version}</version>
 				<configuration>
-					<argLine>
-						--add-opens java.base/java.util=ALL-UNNAMED
-					</argLine>
+					<argLine>${jacocoArgLineIT} --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
 				</configuration>
 				<executions>
 					<execution>
@@ -186,6 +235,11 @@
 							<goal>integration-test</goal>
 							<goal>verify</goal>
 						</goals>
+						<configuration>
+							<includes>
+								<include>**/*IT.java</include>
+							</includes>
+						</configuration>
 					</execution>
 					<execution>
 						<id>e2e-tests</id>
@@ -194,9 +248,6 @@
 							<goal>verify</goal>
 						</goals>
 						<configuration>
-							<excludes>
-								<exclude>**/*IT.java</exclude>
-							</excludes>
 							<includes>
 								<include>**/*E2E.java</include>
 							</includes>
@@ -205,21 +256,11 @@
 				</executions>
 			</plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<argLine>
-						--add-opens java.base/java.util=ALL-UNNAMED
-					</argLine>
-				</configuration>
-			</plugin>
-
-
+			<!-- Maven Shade Plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.5.0</version>
+				<version>3.5.1</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -227,9 +268,9 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
+							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>dimartinofilippo.agenda.App</mainClass>
 								</transformer>
 							</transformers>
@@ -238,56 +279,7 @@
 				</executions>
 			</plugin>
 
-
 		</plugins>
-
-		<pluginManagement><!-- lock down plugins versions to avoid using Maven
-			defaults (may be moved to parent pom) -->
-			<plugins>
-				<!-- clean lifecycle, see
-				https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
-				<plugin>
-					<artifactId>maven-clean-plugin</artifactId>
-					<version>3.4.0</version>
-				</plugin>
-				<!-- default lifecycle, jar packaging: see
-				https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
-				<plugin>
-					<artifactId>maven-resources-plugin</artifactId>
-					<version>3.3.1</version>
-				</plugin>
-				<plugin>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.13.0</version>
-				</plugin>
-				<plugin>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.3.0</version>
-				</plugin>
-				<plugin>
-					<artifactId>maven-jar-plugin</artifactId>
-					<version>3.4.2</version>
-				</plugin>
-				<plugin>
-					<artifactId>maven-install-plugin</artifactId>
-					<version>3.1.2</version>
-				</plugin>
-				<plugin>
-					<artifactId>maven-deploy-plugin</artifactId>
-					<version>3.1.2</version>
-				</plugin>
-				<!-- site lifecycle, see
-				https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
-				<plugin>
-					<artifactId>maven-site-plugin</artifactId>
-					<version>3.12.1</version>
-				</plugin>
-				<plugin>
-					<artifactId>maven-project-info-reports-plugin</artifactId>
-					<version>3.6.1</version>
-				</plugin>
-			</plugins>
-		</pluginManagement>
 	</build>
 
 	<profiles>
@@ -303,16 +295,6 @@
 								<exclude>**/*Testcontainer*.java</exclude>
 							</excludes>
 						</configuration>
-						<executions>
-							<execution>
-								<id>e2e-tests</id>
-								<configuration>
-									<excludes>
-										<exclude>**/*E2E.java</exclude>
-									</excludes>
-								</configuration>
-							</execution>
-						</executions>
 					</plugin>
 				</plugins>
 			</build>
@@ -324,8 +306,7 @@
 				<plugins>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>3.0.0-M9</version>
+						<artifactId>maven-failsafe-plugin</artifactId>
 						<configuration>
 							<excludes>
 								<exclude>**/AgendaControllerMongoIT.java</exclude>
@@ -336,5 +317,47 @@
 			</build>
 		</profile>
 
+		<profile>
+			<id>jacoco-report</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>merge-results</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>merge</goal>
+								</goals>
+								<configuration>
+									<fileSets>
+										<fileSet>
+											<directory>${project.build.directory}</directory>
+											<includes>
+												<include>*.exec</include>
+											</includes>
+										</fileSet>
+									</fileSets>
+									<destFile>${project.build.directory}/aggregate.exec</destFile>
+								</configuration>
+							</execution>
+							<execution>
+								<id>aggregate-report</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>report</goal>
+								</goals>
+								<configuration>
+									<dataFile>${project.build.directory}/aggregate.exec</dataFile>
+									<outputDirectory>${project.reporting.outputDirectory}/jacoco-aggregate</outputDirectory>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 </project>
