@@ -15,11 +15,11 @@ import dimartinofilippo.agenda.repository.ToDoRepository;
 
 public class ToDoSQLRepository implements ToDoRepository {
 
-	private static final String TABLE_NAME = "todos";
-	private static final String SELECT_ALL = "SELECT title, done FROM " + TABLE_NAME + " ORDER BY title";
-	private static final String SELECT_BY_TITLE = "SELECT title, done FROM " + TABLE_NAME + " WHERE title = ?";
-	private static final String INSERT = "INSERT INTO " + TABLE_NAME + "(title, done) VALUES(?,?)";
-	private static final String DELETE = "DELETE FROM " + TABLE_NAME + " WHERE title = ?";
+	static final String TABLE_NAME = "todos";
+	static final String SELECT_ALL = "SELECT title, done FROM " + TABLE_NAME + " ORDER BY title";
+	static final String SELECT_BY_TITLE = "SELECT title, done FROM " + TABLE_NAME + " WHERE title = ?";
+	static final String INSERT = "INSERT INTO " + TABLE_NAME + "(title, done) VALUES(?,?)";
+	static final String DELETE = "DELETE FROM " + TABLE_NAME + " WHERE title = ?";
 
 	private DataSource dataSource;
 

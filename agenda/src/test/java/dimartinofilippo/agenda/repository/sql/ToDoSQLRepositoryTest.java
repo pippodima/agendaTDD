@@ -1,115 +1,130 @@
 package dimartinofilippo.agenda.repository.sql;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 import javax.sql.DataSource;
 
-import org.h2.jdbcx.JdbcDataSource;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import dimartinofilippo.agenda.model.ToDo;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ToDoSQLRepositoryTest {
+@ExtendWith(MockitoExtension.class)
+class ToDoSQLRepositoryTest {
 
-	private DataSource dataSource;
-	private ToDoSQLRepository sqlRepository;
+    @Mock
+    private DataSource dataSource;
 
-	@BeforeAll
-	void setupDB() throws Exception {
-		JdbcDataSource ds = new JdbcDataSource();
-		ds.setURL("jdbc:h2:mem:agenda;MODE=PostgreSQL;DB_CLOSE_DELAY=-1");
-		ds.setUser("pippo");
-		ds.setPassword("");
-		this.dataSource = ds;
-		createSchema();
-	}
+    @Mock
+    private Connection connection;
 
-	@BeforeEach
-	void clean() throws Exception {
-		try (Connection c = dataSource.getConnection(); Statement st = c.createStatement()) {
-			st.executeUpdate("TRUNCATE TABLE todos");
-		}
+    @Mock
+    private PreparedStatement preparedStatement;
 
-		sqlRepository = new ToDoSQLRepository(dataSource);
-	}
+    @Mock
+    private Statement statement;
 
-	@Test
-	void testFindAllWhenEmptyReturnEmptyList() {
-		assertThat(sqlRepository.findAll().isEmpty());
-	}
+    @Mock
+    private ResultSet resultSet;
 
-	@Test
-	void testFindAllWhenNotEmptyReturnsRows() throws Exception {
-		insert("todo1", true);
-		insert("todo2", false);
-		assertThat(sqlRepository.findAll()).containsExactly(new ToDo("todo1", true), new ToDo("todo2", false));
-	}
+    @InjectMocks
+    private ToDoSQLRepository sqlRepository;
 
-	@Test
-	void testFindByTitle_notFound_returnsEmpty() {
-		assertThat(sqlRepository.findByTitle("missing")).isEmpty();
-	}
+    @BeforeEach
+    void setup() throws Exception {
+        when(dataSource.getConnection()).thenReturn(connection);
+    }
 
-	@Test
-	void testFindByTitle_found_returnsOptional() throws Exception {
-		insert("task1", false);
-		insert("task2", true);
-		assertThat(sqlRepository.findByTitle("task2")).isPresent().contains(new ToDo("task2", true));
-	}
+    @Test
+    void testFindAllWhenEmptyReturnEmptyList() throws Exception {
+        when(connection.prepareStatement(ToDoSQLRepository.SELECT_ALL))
+                .thenReturn(preparedStatement);
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(false);
 
-	@Test
-	void testSaveInsertRow() {
-		ToDo todo = new ToDo("todo1", false);
-		sqlRepository.save(todo);
-		assertThat(selectAll().contains(todo)).isTrue();
-	}
+        List<ToDo> result = sqlRepository.findAll();
 
-	@Test
-	void deleteByTitle_removesRow() throws Exception {
-		insert("task1", false);
-		sqlRepository.deleteByTitle("task1");
-		assertThat(selectAll()).isEmpty();
-	}
+        assertThat(result).isEmpty();
+    }
 
-	// helpers
-	private void createSchema() throws Exception {
-		try (Connection c = dataSource.getConnection(); Statement st = c.createStatement()) {
-			st.executeUpdate("CREATE TABLE IF NOT EXISTS todos (" + "title VARCHAR(255) PRIMARY KEY,"
-					+ "done BOOLEAN NOT NULL" + ")");
-		}
-	}
+    @Test
+    void testFindAllWhenNotEmptyReturnsRows() throws Exception {
+        when(connection.prepareStatement(ToDoSQLRepository.SELECT_ALL))
+                .thenReturn(preparedStatement);
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
 
-	private void insert(String title, boolean done) throws Exception {
-		try (Connection c = dataSource.getConnection();
-				PreparedStatement ps = c.prepareStatement("INSERT INTO todos(title, done) VALUES(?, ?)")) {
-			ps.setString(1, title);
-			ps.setBoolean(2, done);
-			ps.executeUpdate();
-		}
-	}
+        when(resultSet.next()).thenReturn(true, true, false);
+        when(resultSet.getString("title")).thenReturn("todo1", "todo2");
+        when(resultSet.getBoolean("done")).thenReturn(true, false);
 
-	private List<ToDo> selectAll() {
-		try (Connection c = dataSource.getConnection();
-				PreparedStatement ps = c.prepareStatement("SELECT title, done FROM todos ORDER BY title");
-				ResultSet rs = ps.executeQuery()) {
-			List<ToDo> out = new ArrayList<>();
-			while (rs.next())
-				out.add(new ToDo(rs.getString(1), rs.getBoolean(2)));
-			return out;
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
+        List<ToDo> result = sqlRepository.findAll();
 
+        assertThat(result).containsExactly(
+                new ToDo("todo1", true),
+                new ToDo("todo2", false));
+    }
+
+    @Test
+    void testFindByTitle_notFound_returnsEmpty() throws Exception {
+        when(connection.prepareStatement(ToDoSQLRepository.SELECT_BY_TITLE))
+                .thenReturn(preparedStatement);
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(false);
+
+        Optional<ToDo> result = sqlRepository.findByTitle("missing");
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void testFindByTitle_found_returnsOptional() throws Exception {
+        when(connection.prepareStatement(ToDoSQLRepository.SELECT_BY_TITLE))
+                .thenReturn(preparedStatement);
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getString("title")).thenReturn("task2");
+        when(resultSet.getBoolean("done")).thenReturn(true);
+
+        Optional<ToDo> result = sqlRepository.findByTitle("task2");
+
+        assertThat(result).isPresent().contains(new ToDo("task2", true));
+    }
+
+    @Test
+    void testSaveInsertRow() throws Exception {
+        ToDo todo = new ToDo("todo1", false);
+
+        when(connection.prepareStatement(ToDoSQLRepository.INSERT))
+                .thenReturn(preparedStatement);
+
+        sqlRepository.save(todo);
+
+        verify(preparedStatement).setString(1, "todo1");
+        verify(preparedStatement).setBoolean(2, false);
+        verify(preparedStatement).executeUpdate();
+    }
+
+    @Test
+    void deleteByTitle_removesRow() throws Exception {
+        when(connection.prepareStatement(ToDoSQLRepository.DELETE))
+                .thenReturn(preparedStatement);
+
+        sqlRepository.deleteByTitle("task1");
+
+        verify(preparedStatement).setString(1, "task1");
+        verify(preparedStatement).executeUpdate();
+    }
 }
