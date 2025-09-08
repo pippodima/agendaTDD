@@ -7,6 +7,7 @@ import org.assertj.swing.fixture.JButtonFixture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
+import java.awt.EventQueue;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
@@ -193,11 +194,11 @@ class ToDoSwingViewTest {
     	
     	verify(agendaController).deleteToDo(todo2);
     }
-
     
-
-
-
-
+    @Test
+    void main_shouldRunWithoutException() throws Exception {
+        // call main in the EventQueue to mimic real launch
+        EventQueue.invokeAndWait(() -> ToDoSwingView.main(new String[]{}));
+    }
 
 }

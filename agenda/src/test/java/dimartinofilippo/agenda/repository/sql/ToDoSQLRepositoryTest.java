@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+import java.awt.event.KeyEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,6 +15,7 @@ import java.util.Optional;
 
 import javax.sql.DataSource;
 
+import org.assertj.swing.fixture.FrameFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -120,7 +122,7 @@ class ToDoSQLRepositoryTest {
     }
 
     @Test
-    void deleteByTitle_removesRow() throws Exception {
+    void testDeleteByTitle_removesRow() throws Exception {
         when(connection.prepareStatement(ToDoSQLRepository.DELETE))
                 .thenReturn(preparedStatement);
 
@@ -131,7 +133,7 @@ class ToDoSQLRepositoryTest {
     }
     
     @Test
-    void save_whenSQLException_thenWrapsInRuntimeException() throws Exception {
+    void testSave_whenSQLException_thenWrapsInRuntimeException() throws Exception {
         when(connection.prepareStatement(anyString())).thenThrow(new SQLException("boom"));
 
         ToDo todo = new ToDo("x", true);
@@ -142,7 +144,7 @@ class ToDoSQLRepositoryTest {
     }
 
     @Test
-    void findByTitle_whenSQLException_thenWrapsInRuntimeException() throws Exception {
+    void testFindByTitle_whenSQLException_thenWrapsInRuntimeException() throws Exception {
         when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
         when(preparedStatement.executeQuery()).thenThrow(new SQLException("fail"));
 
@@ -152,7 +154,7 @@ class ToDoSQLRepositoryTest {
     }
 
     @Test
-    void findAll_whenSQLException_thenWrapsInRuntimeException() throws Exception {
+    void testFindAll_whenSQLException_thenWrapsInRuntimeException() throws Exception {
         when(connection.prepareStatement(anyString())).thenThrow(new SQLException("nope"));
 
         assertThatThrownBy(() -> sqlRepository.findAll())
@@ -161,7 +163,7 @@ class ToDoSQLRepositoryTest {
     }
 
     @Test
-    void deleteByTitle_whenSQLException_thenWrapsInRuntimeException() throws Exception {
+    void testDeleteByTitle_whenSQLException_thenWrapsInRuntimeException() throws Exception {
         when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
         doThrow(new SQLException("bad delete")).when(preparedStatement).executeUpdate();
 
@@ -169,5 +171,5 @@ class ToDoSQLRepositoryTest {
                 .isInstanceOf(RuntimeException.class)
                 .hasCauseInstanceOf(SQLException.class);
     }
-
+    
 }

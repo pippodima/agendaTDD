@@ -173,9 +173,6 @@
 					<excludes>
 						<exclude>dimartinofilippo/agenda/App.class</exclude>
 						<exclude>dimartinofilippo/agenda/model/ToDo.class</exclude>
-						<exclude>**/*Generated*.class</exclude>
-						<exclude>**/dto/**</exclude>
-						<exclude>**/config/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>
