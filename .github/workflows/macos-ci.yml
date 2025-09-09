@@ -20,8 +20,13 @@ jobs:
 
       - name: Install Colima and Docker CLI
         run: |
-          brew install colima docker
-          colima start
+          brew install colima
+          colima start --vm-type=qemu --cpu=2 --memory=2 --disk=10
+
+      - name: Set up Docker environment
+        run: |
+          echo "DOCKER_HOST=unix://$HOME/.colima/default/docker.sock" >> $GITHUB_ENV
+          echo "PATH=$HOME/.colima/bin:$PATH" >> $GITHUB_ENV
 
       - name: Check Docker
         run: docker version
@@ -36,17 +41,20 @@ jobs:
       - name: Start MongoDB
         run: |
           docker run --name mongo -p 27017:27017 -d mongo:4.0.5
-          sleep 15
+          sleep 10
           docker ps
 
-      - name: Install xvfb
-        run: brew install XQuartz
+      - name: Install XQuartz for headless testing
+        run: brew install xquartz
 
       - name: Build and test with Maven
-        run: xvfb-run mvn clean verify
+        run: |
+          export DISPLAY=:99
+          /opt/X11/bin/Xvfb :99 -screen 0 1024x768x16 &
+          mvn clean verify
         working-directory: agenda
 
-      - name: Stop MongoDB
+      - name: Stop MongoDB and Colima
         if: always()
         run: |
           docker stop mongo || true
