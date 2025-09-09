@@ -245,7 +245,7 @@
 					<mutators>
 						<mutator>STRONGER</mutator>
 					</mutators>
-					
+
 					<timeoutFactor>2</timeoutFactor>
 					<timeoutConstant>5000</timeoutConstant>
 					<outputFormats>
@@ -422,6 +422,16 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+
+			<!-- Coverall -->
+			<plugin>
+				<groupId>com.github.hazendaz.maven</groupId>
+				<artifactId>coveralls-maven-plugin</artifactId>
+				<version>4.7.0</version>
+				<configuration>
+					<repoToken>${env.COVERALLS_REPO_TOKEN}</repoToken>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
