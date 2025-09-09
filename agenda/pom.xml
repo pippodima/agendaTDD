@@ -35,6 +35,11 @@
 		<sonar.coverage.jacoco.xmlReportPaths>
 			target/site/jacoco-aggregate/jacoco.xml
 </sonar.coverage.jacoco.xmlReportPaths>
+		<sonar.coverage.exclusions>
+			src/main/java/dimartinofilippo/agenda/model/**,
+			src/main/java/dimartinofilippo/agenda/App*.java
+</sonar.coverage.exclusions>
+
 		<jacocoArgLine></jacocoArgLine>
 		<jacocoArgLineIT></jacocoArgLineIT>
 
