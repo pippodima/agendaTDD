@@ -27,8 +27,14 @@
 		<h2.version>2.2.224</h2.version>
 		<pitest.version>1.15.0</pitest.version>
 		<pitest.junit5.version>1.2.1</pitest.junit5.version>
-		<sonar.organization>pippodima-1</sonar.organization>
 
+		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+		<sonar.projectKey>pippodima_agendaTDD</sonar.projectKey>
+		<sonar.organization>pippodima-1</sonar.organization>
+		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+		<sonar.coverage.jacoco.xmlReportPaths>
+			target/site/jacoco-aggregate/jacoco.xml
+</sonar.coverage.jacoco.xmlReportPaths>
 		<jacocoArgLine></jacocoArgLine>
 		<jacocoArgLineIT></jacocoArgLineIT>
 

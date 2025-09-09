@@ -47,5 +47,8 @@ jobs:
       - name: Build, test, and analyze with SonarQube
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: xvfb-run mvn clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=pippodima_agendaTDD
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          xvfb-run mvn clean verify -Pjacoco-report
+          mvn sonar:sonar -Dsonar.projectKey=pippodima_agendaTDD
         working-directory: agenda
