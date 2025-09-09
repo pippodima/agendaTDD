@@ -103,6 +103,8 @@ class ToDoSQLRepositoryTest {
         Optional<ToDo> result = sqlRepository.findByTitle("task2");
 
         assertThat(result).isPresent().contains(new ToDo("task2", true));
+        verify(preparedStatement).setString(1, "task2");
+
     }
 
     @Test
