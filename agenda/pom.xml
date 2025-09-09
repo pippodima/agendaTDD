@@ -27,6 +27,7 @@
 		<h2.version>2.2.224</h2.version>
 		<pitest.version>1.15.0</pitest.version>
 		<pitest.junit5.version>1.2.1</pitest.junit5.version>
+		<sonar.organization>pippodima-1</sonar.organization>
 
 		<jacocoArgLine></jacocoArgLine>
 		<jacocoArgLineIT></jacocoArgLineIT>
@@ -174,8 +175,8 @@
 				<version>${jacoco.version}</version>
 				<configuration>
 					<excludes>
-						<exclude>**/*App*</exclude>
-						<exclude>dimartinofilippo/agenda/model/ToDo.class</exclude>
+						<exclude>dimartinofilippo/agenda/model/**</exclude>
+						<exclude>dimartinofilippo/agenda/App*.class</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -187,30 +188,12 @@
 						</goals>
 					</execution>
 
-					<!-- Integration Test Agent -->
-					<execution>
-						<id>prepare-agent-integration</id>
-						<phase>pre-integration-test</phase>
-						<goals>
-							<goal>prepare-agent-integration</goal>
-						</goals>
-					</execution>
-
 					<!-- Unit Test Report -->
 					<execution>
 						<id>report</id>
 						<phase>test</phase>
 						<goals>
 							<goal>report</goal>
-						</goals>
-					</execution>
-
-					<!-- Integration Test Report -->
-					<execution>
-						<id>report-integration</id>
-						<phase>post-integration-test</phase>
-						<goals>
-							<goal>report-integration</goal>
 						</goals>
 					</execution>
 
