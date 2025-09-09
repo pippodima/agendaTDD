@@ -17,7 +17,8 @@ import dimartinofilippo.agenda.repository.ToDoRepository;
 public class ToDoMongoRepository implements ToDoRepository{
 	
 	public static final String TODO_COLLECTION_NAME = "todos";
-    public static final String AGENDA_DB_NAME = "agenda";
+	public static final String AGENDA_DB_NAME = "agenda";
+    public static final String TITLE = "title";
 
     private final MongoCollection<Document> todoCollection;
     
@@ -32,7 +33,7 @@ public class ToDoMongoRepository implements ToDoRepository{
 	@Override
 	public ToDo save(ToDo todo) {
 	    Document doc = new Document()
-	            .append("title", todo.getTitle())
+	            .append(TITLE, todo.getTitle())
 	            .append("done", todo.isDone());
 	        todoCollection.insertOne(doc);
 	        return todo;
@@ -40,7 +41,7 @@ public class ToDoMongoRepository implements ToDoRepository{
 
 	@Override
 	public Optional<ToDo> findByTitle(String title) {
-		Document doc = todoCollection.find(Filters.eq("title", title)).first();
+		Document doc = todoCollection.find(Filters.eq(TITLE, title)).first();
 		if (doc != null) {
 			return Optional.of(fromDocumentToToDo(doc));
 		}
@@ -49,7 +50,7 @@ public class ToDoMongoRepository implements ToDoRepository{
 
 	private ToDo fromDocumentToToDo(Document doc) {
 	    return new ToDo(
-	            doc.getString("title"),
+	            doc.getString(TITLE),
 	            doc.getBoolean("done", false)
 	        );
 	}
@@ -64,7 +65,7 @@ public class ToDoMongoRepository implements ToDoRepository{
 
 	@Override
 	public void deleteByTitle(String title) {
-		todoCollection.deleteOne(Filters.eq("title", title));
+		todoCollection.deleteOne(Filters.eq(TITLE, title));
 		
 	}
 
