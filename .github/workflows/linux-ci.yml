@@ -33,23 +33,7 @@ jobs:
     - name: Install xvfb
       run: sudo apt-get update && sudo apt-get install -y xvfb
     
-    - name: Build and run tests with xvfb
-      run: xvfb-run mvn clean verify
-      working-directory: agenda
-  
-    - name: Cache SonarQube packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.sonar/cache
-        key: ${{ runner.os }}-sonar
-        restore-keys: ${{ runner.os }}-sonar
-    - name: Cache Maven packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
-    - name: Build and analyze
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=pippodima_agendaTDD
+	  - name: Build and analyze with SonarCloud
+	    env:
+	      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+	    run: xvfb-run mvn -B clean verify sonar:sonar -Dsonar.projectKey=pippodima_agendaTDD
