@@ -40,7 +40,7 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 	private JScrollPane scrollPane;
 	private JButton btnDeleteSelected;
 	private JLabel lblErrorMessage;
-	private AgendaController agendaController;
+	private transient AgendaController agendaController;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(() -> {
