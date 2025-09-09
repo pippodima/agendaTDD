@@ -59,6 +59,7 @@ public class SQLTransactionManagerTest {
 	}
 	
     @Test
+    @SuppressWarnings("unchecked")
     void testDoInTransaction_runtimeExceptionRollsBack() throws SQLException {
         TransactionCode<Object> code = mock(TransactionCode.class);
         when(code.apply(repository)).thenThrow(new RuntimeException("Test exception"));
@@ -72,6 +73,7 @@ public class SQLTransactionManagerTest {
     }
     
     @Test
+    @SuppressWarnings("unchecked")
     void testDoInTransaction_rollbackFails() throws SQLException {
         TransactionCode<Object> code = mock(TransactionCode.class);
         when(code.apply(repository)).thenThrow(new RuntimeException("Test exception"));
@@ -91,6 +93,7 @@ public class SQLTransactionManagerTest {
     }
     
     @Test
+    @SuppressWarnings("unchecked")
     void testDoInTransaction_setAutoCommitFails() throws SQLException {
         // Arrange
         TransactionCode<Object> code = mock(TransactionCode.class);

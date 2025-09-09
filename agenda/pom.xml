@@ -164,62 +164,63 @@
 				</configuration>
 			</plugin>
 
-			<!-- JaCoCo Plugin -->
+
+			<!-- jacoco -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>${jacoco.version}</version>
 				<configuration>
 					<excludes>
-						<exclude>dimartinofilippo/agenda/App.class</exclude>
+						<exclude>**/*App*</exclude>
 						<exclude>dimartinofilippo/agenda/model/ToDo.class</exclude>
 					</excludes>
 				</configuration>
 				<executions>
+					<!-- Unit Test Agent -->
 					<execution>
 						<id>prepare-agent</id>
-						<phase>initialize</phase>
 						<goals>
 							<goal>prepare-agent</goal>
 						</goals>
-						<configuration>
-							<propertyName>jacocoArgLine</propertyName>
-						</configuration>
 					</execution>
+
+					<!-- Integration Test Agent -->
 					<execution>
 						<id>prepare-agent-integration</id>
 						<phase>pre-integration-test</phase>
 						<goals>
 							<goal>prepare-agent-integration</goal>
 						</goals>
-						<configuration>
-							<propertyName>jacocoArgLineIT</propertyName>
-						</configuration>
 					</execution>
+
+					<!-- Unit Test Report -->
 					<execution>
 						<id>report</id>
-						<phase>verify</phase>
+						<phase>test</phase>
 						<goals>
 							<goal>report</goal>
 						</goals>
 					</execution>
+
+					<!-- Integration Test Report -->
 					<execution>
 						<id>report-integration</id>
-						<phase>verify</phase>
+						<phase>post-integration-test</phase>
 						<goals>
 							<goal>report-integration</goal>
 						</goals>
 					</execution>
+
 				</executions>
 			</plugin>
-
 			<!-- Maven Surefire Plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${surefire.version}</version>
 				<configuration>
-					<argLine>${jacocoArgLine} --add-opens
+					<argLine>@{argLine} --add-opens
 						java.base/java.util=ALL-UNNAMED --add-opens
 						java.base/java.lang=ALL-UNNAMED</argLine>
 					<includes>
@@ -238,7 +239,7 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>${failsafe.version}</version>
 				<configuration>
-					<argLine>${jacocoArgLineIT} --add-opens
+					<argLine>@{argLine} --add-opens
 						java.base/java.util=ALL-UNNAMED --add-opens
 						java.base/java.lang=ALL-UNNAMED</argLine>
 				</configuration>
@@ -331,7 +332,6 @@
 				</executions>
 			</plugin>
 
-			<!-- Maven Shade Plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -344,6 +344,24 @@
 						</goals>
 						<configuration>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<!-- Add filters to exclude duplicate resources -->
+							<filters>
+								<!-- Exclude duplicate native-image.properties
+								from bson -->
+								<filter>
+									<artifact>org.mongodb:bson</artifact>
+									<excludes>
+										<exclude>META-INF/native-image/**</exclude>
+									</excludes>
+								</filter>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/MANIFEST.MF</exclude>
+									</excludes>
+								</filter>
+
+							</filters>
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -354,7 +372,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 		</plugins>
 	</build>
 
