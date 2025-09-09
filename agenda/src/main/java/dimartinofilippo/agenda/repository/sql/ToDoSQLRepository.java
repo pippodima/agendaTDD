@@ -46,16 +46,15 @@ public class ToDoSQLRepository implements ToDoRepository {
 	public Optional<ToDo> findByTitle(String title) {
 		String sql = SELECT_BY_TITLE;
 		try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+
 			ps.setString(1, title);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					return Optional.of(new ToDo(rs.getString("title"), rs.getBoolean("done")));
-				}
-			}
+			ResultSet rs = ps.executeQuery();
+
+			return rs.next() ? Optional.of(new ToDo(rs.getString("title"), rs.getBoolean("done"))) : Optional.empty();
+
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
-		return Optional.empty();
 	}
 
 	@Override
