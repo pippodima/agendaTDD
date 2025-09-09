@@ -25,6 +25,8 @@
 		<jacoco.version>0.8.12</jacoco.version>
 		<postgresql.version>42.7.4</postgresql.version>
 		<h2.version>2.2.224</h2.version>
+		<pitest.version>1.15.0</pitest.version>
+		<pitest.junit5.version>1.2.1</pitest.junit5.version>
 
 		<jacocoArgLine></jacocoArgLine>
 		<jacocoArgLineIT></jacocoArgLineIT>
@@ -214,6 +216,55 @@
 
 				</executions>
 			</plugin>
+
+			<!-- PIT Mutation Testing -->
+			<plugin>
+				<groupId>org.pitest</groupId>
+				<artifactId>pitest-maven</artifactId>
+				<version>${pitest.version}</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.pitest</groupId>
+						<artifactId>pitest-junit5-plugin</artifactId>
+						<version>${pitest.junit5.version}</version>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<targetClasses>
+						<param>dimartinofilippo.agenda.*</param>
+					</targetClasses>
+					<targetTests>
+						<param>dimartinofilippo.agenda.*Test</param>
+					</targetTests>
+					<excludedClasses>
+						<param>dimartinofilippo.agenda.view.swing.*</param>
+						<param>dimartinofilippo.agenda.model.*</param>
+						<param>dimartinofilippo.agenda.App*</param>
+
+					</excludedClasses>
+					<mutators>
+						<mutator>STRONGER</mutator>
+					</mutators>
+					
+					<timeoutFactor>2</timeoutFactor>
+					<timeoutConstant>5000</timeoutConstant>
+					<outputFormats>
+						<format>HTML</format>
+						<format>XML</format>
+					</outputFormats>
+					<failWhenNoMutations>false</failWhenNoMutations>
+				</configuration>
+				<executions>
+					<execution>
+						<id>pitest</id>
+						<phase>test</phase>
+						<goals>
+							<goal>mutationCoverage</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
 			<!-- Maven Surefire Plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -452,6 +503,22 @@
 								</configuration>
 							</execution>
 						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
+			<id>pitest</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.pitest</groupId>
+						<artifactId>pitest-maven</artifactId>
+						<configuration>
+							<withHistory>true</withHistory>
+							<exportLineCoverage>true</exportLineCoverage>
+						</configuration>
 					</plugin>
 				</plugins>
 			</build>
