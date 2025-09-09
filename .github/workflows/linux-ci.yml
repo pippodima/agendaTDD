@@ -1,39 +1,51 @@
-name: Java CI with Maven and Docker in Linux
+name: Java CI with Maven, Docker, and SonarQube
 
 on:
   push:
   pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   build:
+    name: Build, test, and analyze
     runs-on: ubuntu-latest
-    
+
     services:
       mongo:
         image: mongo:4.0.5
         ports:
           - 27017:27017
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: 17
-    
-    - name: Cache Maven packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml', '**/*.yml') }}
-        restore-keys: ${{ runner.os }}-m2-
-    
-    - name: Install xvfb
-      run: sudo apt-get update && sudo apt-get install -y xvfb
-    
-	  - name: Build and analyze with SonarCloud
-	    env:
-	      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-	    run: xvfb-run mvn -B clean verify sonar:sonar -Dsonar.projectKey=pippodima_agendaTDD
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml', '**/*.yml') }}
+          restore-keys: ${{ runner.os }}-m2-
+
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Build, test, and analyze with SonarQube
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: xvfb-run mvn clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=pippodima_agendaTDD
+        working-directory: agenda
