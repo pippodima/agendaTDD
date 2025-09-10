@@ -32,8 +32,8 @@ public class AgendaController {
 			return;
 		}
 
-		transactionManager.doInTransaction(todoRepository -> todoRepository.save(todo));
-		todoView.addedToDo(todo);
+		ToDo savedTodo = transactionManager.doInTransaction(todoRepository -> todoRepository.save(todo));
+		todoView.addedToDo(savedTodo);
 
 	}
 
