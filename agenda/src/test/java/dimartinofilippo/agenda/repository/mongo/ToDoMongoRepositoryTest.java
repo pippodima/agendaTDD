@@ -26,7 +26,7 @@ import com.mongodb.client.MongoDatabase;
 import dimartinofilippo.agenda.model.ToDo;
 
 @ExtendWith(MockitoExtension.class)
-public class ToDoMongoRepositoryTest {
+class ToDoMongoRepositoryTest {
 
     @Mock
     private MongoClient mockClient;
