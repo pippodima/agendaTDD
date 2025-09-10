@@ -3,6 +3,7 @@ package dimartinofilippo.agenda.repository.mongo;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.bson.Document;
@@ -60,7 +61,7 @@ public class ToDoMongoRepository implements ToDoRepository{
 	public List<ToDo> findAll() {
 	    return StreamSupport.stream(todoCollection.find().spliterator(), false)
 	                        .map(this::fromDocumentToToDo)
-	                        .collect(Collectors.toList());
+	                        .toList();
 	}
 
 	@Override
