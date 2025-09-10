@@ -41,16 +41,15 @@ class ToDoSwingViewTest {
 	private AgendaController agendaController;
 
 	private AutoCloseable closeableMocks;
-	
-    @Mock
-    private JTextField txtTitle;
 
-    @Mock
-    private JButton btnAdd;
+	@Mock
+	private JTextField txtTitle;
 
-    @Mock
-    private KeyEvent mockKeyEvent;
+	@Mock
+	private JButton btnAdd;
 
+	@Mock
+	private KeyEvent mockKeyEvent;
 
 	@BeforeEach
 	void setUp() {
@@ -102,7 +101,7 @@ class ToDoSwingViewTest {
 	}
 
 	@Test
-	public void testWhenTitleNonEmptyAddButtonShouldBeEnabled() {
+	void testWhenTitleNonEmptyAddButtonShouldBeEnabled() {
 		window.textBox("titleTextBox").enterText("todo1");
 		window.button(JButtonMatcher.withText("Add ToDo")).requireEnabled();
 	}
@@ -118,7 +117,7 @@ class ToDoSwingViewTest {
 	}
 
 	@Test
-	public void testDeleteButtonShouldBeEnabledOnlyWhenAToDoIsSelected() {
+	void testDeleteButtonShouldBeEnabledOnlyWhenAToDoIsSelected() {
 		ToDo todo = new ToDo("Buy milk", false);
 		GuiActionRunner.execute(() -> todoSwingView.showAllToDos(List.of(todo)));
 
@@ -134,7 +133,7 @@ class ToDoSwingViewTest {
 	}
 
 	@Test
-	public void testsShowAllToDosShouldAddToDoTitleToTheList() {
+	void testsShowAllToDosShouldAddToDoTitleToTheList() {
 		ToDo todo1 = new ToDo("todo1", false);
 		ToDo todo2 = new ToDo("todo2", true);
 
@@ -146,14 +145,14 @@ class ToDoSwingViewTest {
 	}
 
 	@Test
-	public void testShowErrorShouldShowTheMessageInTheErrorLabel() {
+	void testShowErrorShouldShowTheMessageInTheErrorLabel() {
 		GuiActionRunner.execute(() -> todoSwingView.showError("Error"));
 
 		window.label("errorMessageLabel").requireText("Error");
 	}
 
 	@Test
-	public void testToDoAddedShouldAddToDoToListAndResetError() {
+	void testToDoAddedShouldAddToDoToListAndResetError() {
 		ToDo todo = new ToDo("todo1", true);
 		GuiActionRunner.execute(() -> todoSwingView.addedToDo(todo));
 
@@ -165,7 +164,7 @@ class ToDoSwingViewTest {
 	}
 
 	@Test
-	public void testToDoRemovedShouldRemoveTheToDoFromTheListAndResetTheErrorLabel() {
+	void testToDoRemovedShouldRemoveTheToDoFromTheListAndResetTheErrorLabel() {
 		ToDo todo1 = new ToDo("todo1", true);
 		ToDo todo2 = new ToDo("todo2", false);
 
@@ -184,7 +183,7 @@ class ToDoSwingViewTest {
 	}
 
 	@Test
-	public void testAddButtonShouldDelegateToControllerAddToDo() {
+	void testAddButtonShouldDelegateToControllerAddToDo() {
 		window.textBox("titleTextBox").enterText("todo");
 		window.button(JButtonMatcher.withText("Add ToDo")).click();
 
@@ -192,7 +191,7 @@ class ToDoSwingViewTest {
 	}
 
 	@Test
-	public void testDeleteButtonShouldDelegateToControllerDeleteToDo() {
+	void testDeleteButtonShouldDelegateToControllerDeleteToDo() {
 		ToDo todo1 = new ToDo("todo1", true);
 		ToDo todo2 = new ToDo("todo2", false);
 
@@ -213,28 +212,26 @@ class ToDoSwingViewTest {
 		// call main in the EventQueue to mimic real launch
 		EventQueue.invokeAndWait(() -> ToDoSwingView.main(new String[] {}));
 	}
-	
-    @Test
-    void testButtonEnableLogic_CoversBothBranches() {
-        // Create the KeyAdapter
-        KeyAdapter btnAddEnabler = new KeyAdapter() {
-            @Override
-            public void keyReleased(KeyEvent e) {
-                btnAdd.setEnabled(!txtTitle.getText().trim().isEmpty());
-            }
-        };
 
-        // BRANCH 1: Test FALSE outcome (button disabled)
-        when(txtTitle.getText()).thenReturn(""); // Empty string
-        btnAddEnabler.keyReleased(mockKeyEvent);
-        verify(btnAdd).setEnabled(false); // Verify false branch
+	@Test
+	void testButtonEnableLogic_CoversBothBranches() {
+		// Create the KeyAdapter
+		KeyAdapter btnAddEnabler = new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				btnAdd.setEnabled(!txtTitle.getText().trim().isEmpty());
+			}
+		};
 
-        // BRANCH 2: Test TRUE outcome (button enabled)  
-        when(txtTitle.getText()).thenReturn("Meeting"); // Non-empty string
-        btnAddEnabler.keyReleased(mockKeyEvent);
-        verify(btnAdd).setEnabled(true); // Verify true branch
-    }
+		// BRANCH 1: Test FALSE outcome (button disabled)
+		when(txtTitle.getText()).thenReturn(""); // Empty string
+		btnAddEnabler.keyReleased(mockKeyEvent);
+		verify(btnAdd).setEnabled(false); // Verify false branch
 
-	
-	
+		// BRANCH 2: Test TRUE outcome (button enabled)
+		when(txtTitle.getText()).thenReturn("Meeting"); // Non-empty string
+		btnAddEnabler.keyReleased(mockKeyEvent);
+		verify(btnAdd).setEnabled(true); // Verify true branch
+	}
+
 }
