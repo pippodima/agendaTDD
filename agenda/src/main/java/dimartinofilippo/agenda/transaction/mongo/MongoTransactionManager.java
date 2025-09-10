@@ -16,10 +16,7 @@ public class MongoTransactionManager implements TransactionManager{
 
 	@Override
 	public <T> T doInTransaction(TransactionCode<T> code) {
-		try {
             return code.apply(repository);
-        } catch (RuntimeException e) {
-            throw e;
-        }	}
+	}
 
 }
