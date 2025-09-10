@@ -70,7 +70,6 @@ public class App {
         String password = args.length > 3 ? args[3] : "password";
         String databaseName = "agenda";
 
-        Class.forName("org.postgresql.Driver");
         createDatabaseIfNotExists(jdbcUrl, username, password, databaseName);
 
         DataSource dataSource = createDataSource(jdbcUrl, username, password);
