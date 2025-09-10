@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import dimartinofilippo.agenda.model.ToDo;
+import dimartinofilippo.agenda.repository.ToDoRepository;
 import dimartinofilippo.agenda.transaction.TransactionManager;
 import dimartinofilippo.agenda.view.ToDoView;
 
@@ -18,7 +19,7 @@ public class AgendaController {
 	}
 
 	public List<ToDo> allToDos() {
-		List<ToDo> todos = transactionManager.doInTransaction(todoRepository -> todoRepository.findAll());
+		List<ToDo> todos = transactionManager.doInTransaction(ToDoRepository::findAll);
 		todoView.showAllToDos(todos);
 		return todos;
 
