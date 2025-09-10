@@ -1,25 +1,33 @@
 package dimartinofilippo.agenda.transaction.sql;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.AppenderBase;
 import dimartinofilippo.agenda.repository.ToDoRepository;
 import dimartinofilippo.agenda.transaction.sql.SQLTransactionManager.TransactionException;
 import dimartinofilippo.agenda.transaction.sql.SQLTransactionManager.TransactionRollbackException;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class SQLTransactionManagerTest {
+
+	private TestAppender testAppender;
 
 	@Mock
 	private Connection mockConnection;
@@ -29,6 +37,15 @@ class SQLTransactionManagerTest {
 
 	@InjectMocks
 	private SQLTransactionManager txManager;
+
+	@BeforeEach
+	void setupAppender() {
+		testAppender = new TestAppender();
+		testAppender.start();
+		Logger logger = (Logger) LoggerFactory.getLogger(SQLTransactionManager.class);
+		logger.setLevel(Level.WARN);
+		logger.addAppender(testAppender);
+	}
 
 	@Test
 	void testCommitIsCalledOnSuccess() throws SQLException {
@@ -116,30 +133,20 @@ class SQLTransactionManagerTest {
 	}
 
 	@Test
-	void testRestoreAutoCommitLogsWarningWhenSQLExceptionOccurs() throws SQLException {
+	void testRestoreAutoCommitLogsWarningWhenSQLExceptionOccurs() throws Exception {
 		when(mockConnection.isClosed()).thenReturn(false);
-		// Simulate failure when restoring auto-commit
 		doThrow(new SQLException("cannot restore")).when(mockConnection).setAutoCommit(true);
 
 		txManager = new SQLTransactionManager(null, mockConnection);
 
-		// Capture System.err
-		ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-		System.setErr(new PrintStream(errContent));
+		var method = SQLTransactionManager.class.getDeclaredMethod("restoreAutoCommit", boolean.class);
+		method.setAccessible(true);
+		method.invoke(txManager, true);
 
-		try {
-			var method = SQLTransactionManager.class.getDeclaredMethod("restoreAutoCommit", boolean.class);
-			method.setAccessible(true);
-			method.invoke(txManager, true);
-		} catch (Exception e) {
-			fail("Unexpected exception: " + e.getMessage());
-		} finally {
-			// Restore System.err
-			System.setErr(System.err);
-		}
+		boolean found = testAppender.events.stream().anyMatch(event -> event.getLevel() == Level.WARN
+				&& event.getFormattedMessage().contains("Warning: Failed to restore auto-commit state: cannot restore"));
 
-		String logs = errContent.toString();
-		assertTrue(logs.contains("Warning: Failed to restore auto-commit state: cannot restore"));
+		assertTrue(found, "Expected warning log not found");
 	}
 
 	@Test
@@ -182,6 +189,15 @@ class SQLTransactionManagerTest {
 
 		assertEquals(expected, actual);
 		verify(mockConnection).commit();
+	}
+
+	private static class TestAppender extends AppenderBase<ILoggingEvent> {
+		private final List<ILoggingEvent> events = new ArrayList<>();
+
+		@Override
+		protected void append(ILoggingEvent eventObject) {
+			events.add(eventObject);
+		}
 	}
 
 }

@@ -3,12 +3,16 @@ package dimartinofilippo.agenda.transaction.sql;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import dimartinofilippo.agenda.repository.ToDoRepository;
 import dimartinofilippo.agenda.transaction.TransactionCode;
 import dimartinofilippo.agenda.transaction.TransactionManager;
 
 public class SQLTransactionManager implements TransactionManager {
 
+    private static final Logger logger = LoggerFactory.getLogger(SQLTransactionManager.class);
     private final ToDoRepository repository;
     private final Connection connection;
 
@@ -56,8 +60,7 @@ public class SQLTransactionManager implements TransactionManager {
                 getConnection().setAutoCommit(originalAutoCommit);
             }
         } catch (SQLException e) {
-            // Log the error but don't throw to avoid masking original exception
-            System.err.println("Warning: Failed to restore auto-commit state: " + e.getMessage());
+            logger.warn("Warning: Failed to restore auto-commit state: " + e.getMessage());
         }
     }
 
