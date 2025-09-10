@@ -26,5 +26,10 @@
 			<type>2</type>
 			<locationURI>PARENT-1-PROJECT_LOC/.github</locationURI>
 		</link>
+		<link>
+			<name>ReadMe.md</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/README.md</locationURI>
+		</link>
 	</linkedResources>
 </projectDescription>

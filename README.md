@@ -1,0 +1,3 @@
+[![Java CI with Maven, Docker, and SonarQube](https://github.com/pippodima/agendaTDD/actions/workflows/linux-ci.yml/badge.svg)](https://github.com/pippodima/agendaTDD/actions/workflows/linux-ci.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=pippodima_agendaTDD&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=pippodima_agendaTDD)
+[![Coverage Status](https://coveralls.io/repos/github/pippodima/agendaTDD/badge.svg?branch=main)](https://coveralls.io/github/pippodima/agendaTDD?branch=main)
