@@ -118,13 +118,11 @@ class SQLTransactionManagerTest {
 
 	@Test
 	void testRestoreAutoCommitLogsWarningWhenSQLExceptionOccurs() throws SQLException {
-		// Mock connection
-		Connection mockConnection = Mockito.mock(Connection.class);
 		when(mockConnection.isClosed()).thenReturn(false);
 		// Simulate failure when restoring auto-commit
 		doThrow(new SQLException("cannot restore")).when(mockConnection).setAutoCommit(true);
 
-		SQLTransactionManager txManager = new SQLTransactionManager(null, mockConnection);
+		txManager = new SQLTransactionManager(null, mockConnection);
 
 		// Capture System.err
 		ByteArrayOutputStream errContent = new ByteArrayOutputStream();
@@ -149,7 +147,7 @@ class SQLTransactionManagerTest {
 	void testRollbackNotCalledWhenConnectionClosed() throws Exception {
 		when(mockConnection.isClosed()).thenReturn(true);
 
-		SQLTransactionManager txManager = new SQLTransactionManager(mockRepo, mockConnection);
+		txManager = new SQLTransactionManager(mockRepo, mockConnection);
 
 		// Use reflection to call private rollbackTransaction()
 		var method = SQLTransactionManager.class.getDeclaredMethod("rollbackTransaction");
@@ -165,7 +163,7 @@ class SQLTransactionManagerTest {
 	void testRestoreAutoCommitNotCalledWhenConnectionClosed() throws Exception {
 		when(mockConnection.isClosed()).thenReturn(true);
 
-		SQLTransactionManager txManager = new SQLTransactionManager(mockRepo, mockConnection);
+		txManager = new SQLTransactionManager(mockRepo, mockConnection);
 
 		var method = SQLTransactionManager.class.getDeclaredMethod("restoreAutoCommit", boolean.class);
 		method.setAccessible(true);
