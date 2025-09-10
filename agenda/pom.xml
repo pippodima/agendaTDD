@@ -42,7 +42,7 @@
 
 		<!-- Disable rule for "Tests should include assertions" -->
 		<sonar.issue.ignore.multicriteria>e1</sonar.issue.ignore.multicriteria>
-		<sonar.issue.ignore.multicriteria.e1.ruleKey>squid:S2699</sonar.issue.ignore.multicriteria.e1.ruleKey>
+		<sonar.issue.ignore.multicriteria.e1.ruleKey>java:S2699</sonar.issue.ignore.multicriteria.e1.ruleKey>
 		<sonar.issue.ignore.multicriteria.e1.resourceKey>**/*Test.java</sonar.issue.ignore.multicriteria.e1.resourceKey>
 
 
