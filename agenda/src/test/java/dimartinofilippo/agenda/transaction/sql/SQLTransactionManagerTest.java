@@ -7,6 +7,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import dimartinofilippo.agenda.repository.ToDoRepository;
+import dimartinofilippo.agenda.transaction.sql.SQLTransactionManager.TransactionException;
+import dimartinofilippo.agenda.transaction.sql.SQLTransactionManager.TransactionRollbackException;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -60,4 +62,63 @@ class SQLTransactionManagerUnitTest {
 		verify(mockConnection).rollback();
 		verify(mockConnection).setAutoCommit(true);
 	}
+	
+	@Test
+	void testRuntimeExceptionWrappedInTransactionException() throws SQLException {
+	    when(mockConnection.getAutoCommit()).thenReturn(true);
+
+	    TransactionException ex = assertThrows(
+	        SQLTransactionManager.TransactionException.class,
+	        () -> txManager.doInTransaction(repo -> {
+	            throw new RuntimeException("boom"); // business logic fails
+	        })
+	    );
+
+	    assertEquals("Transaction failed due to runtime exception", ex.getMessage());
+	    assertTrue(ex.getCause() instanceof RuntimeException);
+
+	    verify(mockConnection).rollback();
+	    verify(mockConnection).setAutoCommit(true);
+	}
+	
+	@Test
+	void testSQLExceptionDuringCommit() throws SQLException {
+	    when(mockConnection.getAutoCommit()).thenReturn(true);
+	    doThrow(new SQLException("db error")).when(mockConnection).commit();
+
+	    TransactionException ex = assertThrows(
+	        SQLTransactionManager.TransactionException.class,
+	        () -> txManager.doInTransaction(repo -> "ok")
+	    );
+
+	    assertEquals("Transaction failed due to SQL exception", ex.getMessage());
+	    assertTrue(ex.getCause() instanceof SQLException);
+
+	    verify(mockConnection).rollback();
+	    verify(mockConnection).setAutoCommit(true);
+	}
+	
+	@Test
+	void testRollbackException() throws SQLException {
+	    when(mockConnection.getAutoCommit()).thenReturn(true);
+
+	    // Simulate failure: commit throws SQLException
+	    doThrow(new SQLException("commit failed")).when(mockConnection).commit();
+	    // Simulate rollback ALSO fails
+	    doThrow(new SQLException("rollback failed")).when(mockConnection).rollback();
+
+	    TransactionRollbackException ex = assertThrows(
+	        SQLTransactionManager.TransactionRollbackException.class,
+	        () -> txManager.doInTransaction(repo -> "whatever")
+	    );
+
+	    assertEquals("Transaction rollback failed", ex.getMessage());
+	    assertTrue(ex.getCause() instanceof SQLException);
+
+	    verify(mockConnection).rollback();
+	    verify(mockConnection).setAutoCommit(true);
+	}
+
+
+
 }
