@@ -12,7 +12,6 @@ import com.mongodb.client.MongoClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import dimartinofilippo.agenda.controller.AgendaController;
 import dimartinofilippo.agenda.repository.ToDoRepository;
 import dimartinofilippo.agenda.repository.mongo.ToDoMongoRepository;
@@ -23,12 +22,35 @@ import dimartinofilippo.agenda.transaction.sql.SQLTransactionManager;
 import dimartinofilippo.agenda.view.swing.ToDoSwingView;
 
 public class App {
-	
     private static final Logger logger = LoggerFactory.getLogger(App.class);
 
+    // Custom exception classes defined in the same file
+    public static class DatabaseSchemaException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+		public DatabaseSchemaException(String message) {
+            super(message);
+        }
+
+        public DatabaseSchemaException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    public static class DatabaseInitializationException extends RuntimeException {
+        private static final long serialVersionUID = 2L;
+
+		public DatabaseInitializationException(String message) {
+            super(message);
+        }
+
+        public DatabaseInitializationException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
 
     public static void main(String[] args) {
-        String dbType = args.length > 0 ? args[0].toLowerCase() : "sql"; // default to SQL/PostgreSQL
+        String dbType = args.length > 0 ? args[0].toLowerCase() : "sql";
 
         try {
             ToDoRepository todoRepository;
@@ -52,35 +74,43 @@ public class App {
     }
 
     private static MongoSetup setupMongoDB(String[] args) {
-        String mongoHost = args.length > 1 ? args[1] : "localhost";
-        int mongoPort = args.length > 2 ? Integer.parseInt(args[2]) : 27017;
-        String mongoUri = "mongodb://" + mongoHost + ":" + mongoPort;
+        try {
+            String mongoHost = args.length > 1 ? args[1] : "localhost";
+            int mongoPort = args.length > 2 ? Integer.parseInt(args[2]) : 27017;
+            String mongoUri = "mongodb://" + mongoHost + ":" + mongoPort;
 
-        MongoClient mongoClient = MongoClients.create(mongoUri);
-        ToDoRepository todoRepository = new ToDoMongoRepository(mongoClient);
-        TransactionManager transactionManager = new MongoTransactionManager(todoRepository);
-        
-        logger.info("Using MongoDB: " + mongoUri);
-        return new MongoSetup(todoRepository, transactionManager);
+            MongoClient mongoClient = MongoClients.create(mongoUri);
+            ToDoRepository todoRepository = new ToDoMongoRepository(mongoClient);
+            TransactionManager transactionManager = new MongoTransactionManager(todoRepository);
+            
+            logger.info("Using MongoDB: {}", mongoUri);
+            return new MongoSetup(todoRepository, transactionManager);
+        } catch (Exception e) {
+            throw new DatabaseInitializationException("Failed to initialize MongoDB", e);
+        }
     }
 
-    private static SqlSetup setupPostgreSQL(String[] args) throws Exception {
-        String jdbcUrl = args.length > 1 ? args[1] : "jdbc:postgresql://localhost:5432/agenda";
-        String username = args.length > 2 ? args[2] : "postgres";
-        String password = args.length > 3 ? args[3] : "password";
-        String databaseName = "agenda";
+    private static SqlSetup setupPostgreSQL(String[] args) {
+        try {
+            String jdbcUrl = args.length > 1 ? args[1] : "jdbc:postgresql://localhost:5432/agenda";
+            String username = args.length > 2 ? args[2] : "postgres";
+            String password = args.length > 3 ? args[3] : "password";
+            String databaseName = "agenda";
 
-        createDatabaseIfNotExists(jdbcUrl, username, password, databaseName);
+            createDatabaseIfNotExists(jdbcUrl, username, password, databaseName);
 
-        DataSource dataSource = createDataSource(jdbcUrl, username, password);
-        initializeSqlSchema(dataSource);
+            DataSource dataSource = createDataSource(jdbcUrl, username, password);
+            initializeSqlSchema(dataSource);
 
-        ToDoRepository todoRepository = new ToDoSQLRepository(dataSource);
-        Connection transactionConnection = dataSource.getConnection();
-        TransactionManager transactionManager = new SQLTransactionManager(todoRepository, transactionConnection);
+            ToDoRepository todoRepository = new ToDoSQLRepository(dataSource);
+            Connection transactionConnection = dataSource.getConnection();
+            TransactionManager transactionManager = new SQLTransactionManager(todoRepository, transactionConnection);
 
-        logger.info("Using PostgreSQL database: " + jdbcUrl);
-        return new SqlSetup(todoRepository, transactionManager);
+            logger.info("Using PostgreSQL database: {}", jdbcUrl);
+            return new SqlSetup(todoRepository, transactionManager);
+        } catch (Exception e) {
+            throw new DatabaseInitializationException("Failed to initialize PostgreSQL", e);
+        }
     }
 
     private static DataSource createDataSource(String jdbcUrl, String username, String password) {
@@ -132,9 +162,40 @@ public class App {
         };
     }
 
-    private static void initializeSqlSchema(DataSource dataSource) throws Exception {
+    private static void initializeSqlSchema(DataSource dataSource) {
         try (Connection conn = dataSource.getConnection()) {
             createSqlSchema(conn);
+        } catch (Exception e) {
+            throw new DatabaseSchemaException("Failed to initialize SQL schema", e);
+        }
+    }
+
+    private static void createDatabaseIfNotExists(String jdbcUrl, String username, String password, String dbName) {
+        try {
+            String defaultUrl = jdbcUrl.replace("/" + dbName, "/postgres");
+            try (Connection conn = DriverManager.getConnection(defaultUrl, username, password);
+                    Statement stmt = conn.createStatement();
+                    ResultSet rs = stmt.executeQuery("SELECT 1 FROM pg_database WHERE datname = '" + dbName + "'")) {
+
+                if (!rs.next()) {
+                    stmt.executeUpdate("CREATE DATABASE " + dbName);
+                    logger.info("Database '{}' created.", dbName);
+                }
+            }
+        } catch (Exception e) {
+            throw new DatabaseInitializationException("Failed to create database '" + dbName + "'", e);
+        }
+    }
+
+    private static void createSqlSchema(Connection connection) {
+        try (Statement statement = connection.createStatement()) {
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS todos (" + 
+                "id SERIAL PRIMARY KEY," +
+                "title VARCHAR(255) NOT NULL UNIQUE," + 
+                "done BOOLEAN NOT NULL" + 
+                ")");
+        } catch (Exception e) {
+            throw new DatabaseSchemaException("Failed to create SQL schema", e);
         }
     }
 
@@ -154,38 +215,17 @@ public class App {
     }
 
     private static void handleStartupError(Exception e) {
-        logger.error("Failed to start application: " + e.getMessage());
-        e.printStackTrace();
+        if (e instanceof DatabaseSchemaException || e instanceof DatabaseInitializationException) {
+            logger.error("Database initialization failed: {}", e.getMessage(), e);
+        } else {
+            logger.error("Failed to start application", e);
+        }
         System.exit(1);
     }
 
     private static void handleGuiInitializationError(Exception e) {
-    	logger.error("Failed to initialize GUI: " + e.getMessage());
-        e.printStackTrace();
+        logger.error("Failed to initialize GUI", e);
         System.exit(1);
-    }
-
-    private static void createDatabaseIfNotExists(String jdbcUrl, String username, String password, String dbName)
-            throws Exception {
-        String defaultUrl = jdbcUrl.replace("/" + dbName, "/postgres");
-        try (Connection conn = DriverManager.getConnection(defaultUrl, username, password);
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery("SELECT 1 FROM pg_database WHERE datname = '" + dbName + "'")) {
-
-            if (!rs.next()) {
-                stmt.executeUpdate("CREATE DATABASE " + dbName);
-                logger.info("Database '" + dbName + "' created.");
-            }
-        }
-    }
-
-    private static void createSqlSchema(Connection connection) {
-        try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS todos (" + "id SERIAL PRIMARY KEY,"
-                    + "title VARCHAR(255) NOT NULL UNIQUE," + "done BOOLEAN NOT NULL" + ")");
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create SQL schema", e);
-        }
     }
 
     private record MongoSetup(ToDoRepository todoRepository, TransactionManager transactionManager) {}
