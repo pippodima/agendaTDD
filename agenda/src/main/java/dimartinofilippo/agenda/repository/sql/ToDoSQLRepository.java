@@ -27,9 +27,6 @@ public class ToDoSQLRepository implements ToDoRepository {
             super(message, cause);
         }
         
-        public RepositoryException(Throwable cause) {
-            super(cause);
-        }
     }
     
     public static class DataAccessException extends RepositoryException {
@@ -117,18 +114,4 @@ public class ToDoSQLRepository implements ToDoRepository {
         }
     }
 
-    // Optional: Add an update method if needed
-    public void update(ToDo todo) {
-        String sql = UPDATE;
-        try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setBoolean(1, todo.isDone());
-            ps.setString(2, todo.getTitle());
-            int affectedRows = ps.executeUpdate();
-            if (affectedRows == 0) {
-                throw new EntityNotFoundException("Todo with title '" + todo.getTitle() + "' not found for update");
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException("Failed to update todo with title: " + todo.getTitle(), e);
-        }
-    }
 }

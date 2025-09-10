@@ -177,14 +177,4 @@ class ToDoSQLRepositoryTest {
 				.hasMessageContaining("Todo with title 'nonexistent' not found for deletion");
 	}
 
-	@Test
-	void testUpdate_whenEntityNotFound_thenThrowsEntityNotFoundException() throws Exception {
-		ToDo todo = new ToDo("nonexistent", true);
-		when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
-		when(preparedStatement.executeUpdate()).thenReturn(0); // No rows affected
-
-		assertThatThrownBy(() -> sqlRepository.update(todo))
-				.isInstanceOf(ToDoSQLRepository.EntityNotFoundException.class)
-				.hasMessageContaining("Todo with title 'nonexistent' not found for update");
-	}
 }
