@@ -132,12 +132,8 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 		listTodos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		listTodos.setName("todoList");
 
-		listTodos.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				btnDeleteSelected.setEnabled(!listTodos.isSelectionEmpty());
-			}
-		});
+		listTodos.addListSelectionListener(e -> 
+	    btnDeleteSelected.setEnabled(!listTodos.isSelectionEmpty()));
 
 		scrollPane = new JScrollPane(listTodos);
 		GridBagConstraints gbc_scrollPane = new GridBagConstraints();
