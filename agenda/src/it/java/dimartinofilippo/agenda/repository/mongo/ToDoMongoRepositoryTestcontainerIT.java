@@ -30,22 +30,23 @@ class ToDoMongoRepositoryTestcontainersIT {
     private ToDoMongoRepository todoRepository;
     private MongoCollection<Document> todoCollection;
 
-    @BeforeAll
-    void initClient() {
-        client = MongoClients.create(mongo.getReplicaSetUrl()); // optimized connection
+    @BeforeEach
+    void setup() {
+        if (client == null) {
+            client = MongoClients.create(mongo.getReplicaSetUrl());
+            todoRepository = new ToDoMongoRepository(client);
+        }
+        
+        client.getDatabase(ToDoMongoRepository.AGENDA_DB_NAME).drop();
         MongoDatabase database = client.getDatabase(ToDoMongoRepository.AGENDA_DB_NAME);
         todoCollection = database.getCollection(ToDoMongoRepository.TODO_COLLECTION_NAME);
-        todoRepository = new ToDoMongoRepository(client);
-    }
-
-    @BeforeEach
-    void cleanDatabase() {
-        client.getDatabase(ToDoMongoRepository.AGENDA_DB_NAME).drop();
     }
 
     @AfterAll
     void closeClient() {
-        client.close();
+        if (client != null) {
+            client.close();
+        }
     }
 
     @Test
