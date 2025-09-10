@@ -164,6 +164,15 @@
 			<artifactId>picocli</artifactId>
 			<version>${picocli.version}</version>
 		</dependency>
+
+		<!-- logger binder-->
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.5.6</version>
+			<scope>runtime</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -241,7 +250,7 @@
 					</mutators>
 
 					<timeoutFactor>2</timeoutFactor>
-					<timeoutConstant>5000</timeoutConstant>
+					<timeoutConstant>8000</timeoutConstant>
 					<outputFormats>
 						<format>HTML</format>
 						<format>XML</format>
@@ -335,20 +344,6 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>add-integration-test-resources</id>
-						<phase>generate-test-resources</phase>
-						<goals>
-							<goal>add-test-resource</goal>
-						</goals>
-						<configuration>
-							<resources>
-								<resource>
-									<directory>src/it/resources</directory>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
 						<id>add-e2e-test-sources</id>
 						<phase>generate-test-sources</phase>
 						<goals>
@@ -358,20 +353,6 @@
 							<sources>
 								<source>src/e2e/java</source>
 							</sources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>add-e2e-test-resources</id>
-						<phase>generate-test-resources</phase>
-						<goals>
-							<goal>add-test-resource</goal>
-						</goals>
-						<configuration>
-							<resources>
-								<resource>
-									<directory>src/e2e/resources</directory>
-								</resource>
-							</resources>
 						</configuration>
 					</execution>
 				</executions>
@@ -406,6 +387,7 @@
 										<exclude>META-INF/*.RSA</exclude>
 										<exclude>META-INF/MANIFEST.MF</exclude>
 										<exclude>META-INF/maven/**</exclude>
+										<exclude>META-INF/native-image/**</exclude>
 									</excludes>
 								</filter>
 							</filters>

@@ -23,7 +23,7 @@ public class App {
 
 	public static void main(String[] args) {
 		String dbType = args.length > 0 ? args[0].toLowerCase() : "sql"; // default to SQL/PostgreSQL
- 
+
 		try {
 			ToDoRepository todoRepository;
 			TransactionManager transactionManager;
