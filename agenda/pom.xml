@@ -40,6 +40,15 @@
 			src/main/java/dimartinofilippo/agenda/App*.java
 </sonar.coverage.exclusions>
 
+    <!-- Disable rule for "Tests should include assertions" -->
+    <sonar.issue.ignore.multicriteria.e12.ruleKey>
+      java:S2699    
+    </sonar.issue.ignore.multicriteria.e12.ruleKey>
+    <sonar.issue.ignore.multicriteria.e12.resourceKey>
+      **/*ToDoSwingViewTest.java
+    </sonar.issue.ignore.multicriteria.e12.resourceKey>
+
+
 		<jacocoArgLine></jacocoArgLine>
 		<jacocoArgLineIT></jacocoArgLineIT>
 

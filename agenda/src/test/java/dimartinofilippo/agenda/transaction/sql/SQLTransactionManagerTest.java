@@ -130,9 +130,6 @@ class SQLTransactionManagerTest {
 		ByteArrayOutputStream errContent = new ByteArrayOutputStream();
 		System.setErr(new PrintStream(errContent));
 
-		// Call restoreAutoCommit via reflection (private method)
-		// or by triggering doInTransaction + forcing failure
-		// Here, using reflection for simplicity:
 		try {
 			var method = SQLTransactionManager.class.getDeclaredMethod("restoreAutoCommit", boolean.class);
 			method.setAccessible(true);
