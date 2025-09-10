@@ -53,20 +53,17 @@ public class App {
         String dbType = args.length > 0 ? args[0].toLowerCase() : "sql";
 
         try {
-            ToDoRepository todoRepository;
             TransactionManager transactionManager;
 
             if ("mongo".equals(dbType)) {
                 var mongoSetup = setupMongoDB(args);
-                todoRepository = mongoSetup.todoRepository();
                 transactionManager = mongoSetup.transactionManager();
             } else {
                 var sqlSetup = setupPostgreSQL(args);
-                todoRepository = sqlSetup.todoRepository();
                 transactionManager = sqlSetup.transactionManager();
             }
 
-            initializeGUI(todoRepository, transactionManager);
+            initializeGUI(transactionManager);
 
         } catch (Exception e) {
             handleStartupError(e);
@@ -199,7 +196,7 @@ public class App {
         }
     }
 
-    private static void initializeGUI(ToDoRepository todoRepository, TransactionManager transactionManager) {
+    private static void initializeGUI(TransactionManager transactionManager) {
         EventQueue.invokeLater(() -> {
             try {
                 ToDoSwingView todoView = new ToDoSwingView();
