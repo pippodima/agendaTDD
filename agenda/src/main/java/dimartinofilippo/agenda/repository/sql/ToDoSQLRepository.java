@@ -15,74 +15,120 @@ import dimartinofilippo.agenda.repository.ToDoRepository;
 
 public class ToDoSQLRepository implements ToDoRepository {
 
-	static final String TABLE_NAME = "todos";
-	static final String SELECT_ALL = "SELECT title, done FROM " + TABLE_NAME + " ORDER BY title";
-	static final String SELECT_BY_TITLE = "SELECT title, done FROM " + TABLE_NAME + " WHERE title = ?";
-	static final String INSERT = "INSERT INTO " + TABLE_NAME + "(title, done) VALUES(?,?)";
-	static final String DELETE = "DELETE FROM " + TABLE_NAME + " WHERE title = ?";
+    // Custom exceptions as nested classes
+    public static class RepositoryException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
 
-	private DataSource dataSource;
+		public RepositoryException(String message) {
+            super(message);
+        }
+        
+        public RepositoryException(String message, Throwable cause) {
+            super(message, cause);
+        }
+        
+        public RepositoryException(Throwable cause) {
+            super(cause);
+        }
+    }
+    
+    public static class DataAccessException extends RepositoryException {
+        private static final long serialVersionUID = 2L;
 
-	public ToDoSQLRepository(DataSource dataSource) {
-		this.dataSource = dataSource;
-	}
+		public DataAccessException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+    
+    public static class EntityNotFoundException extends RepositoryException {
+        private static final long serialVersionUID = 3L;
 
-	@Override
-	public ToDo save(ToDo todo) {
-		String sql = INSERT;
-		try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-			ps.setString(1, todo.getTitle());
-			ps.setBoolean(2, todo.isDone());
-			ps.executeUpdate();
+		public EntityNotFoundException(String message) {
+            super(message);
+        }
+    }
 
-			return todo;
+    // Repository constants and implementation
+    static final String TABLE_NAME = "todos";
+    static final String SELECT_ALL = "SELECT title, done FROM " + TABLE_NAME + " ORDER BY title";
+    static final String SELECT_BY_TITLE = "SELECT title, done FROM " + TABLE_NAME + " WHERE title = ?";
+    static final String INSERT = "INSERT INTO " + TABLE_NAME + "(title, done) VALUES(?,?)";
+    static final String UPDATE = "UPDATE " + TABLE_NAME + " SET done = ? WHERE title = ?";
+    static final String DELETE = "DELETE FROM " + TABLE_NAME + " WHERE title = ?";
 
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    private DataSource dataSource;
 
-	@Override
-	public Optional<ToDo> findByTitle(String title) {
-		String sql = SELECT_BY_TITLE;
-		try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+    public ToDoSQLRepository(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
-			ps.setString(1, title);
-			ResultSet rs = ps.executeQuery();
+    @Override
+    public ToDo save(ToDo todo) {
+        String sql = INSERT;
+        try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, todo.getTitle());
+            ps.setBoolean(2, todo.isDone());
+            ps.executeUpdate();
+            return todo;
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to save todo with title: " + todo.getTitle(), e);
+        }
+    }
 
-			return rs.next() ? Optional.of(new ToDo(rs.getString("title"), rs.getBoolean("done"))) : Optional.empty();
+    @Override
+    public Optional<ToDo> findByTitle(String title) {
+        String sql = SELECT_BY_TITLE;
+        try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, title);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? Optional.of(new ToDo(rs.getString("title"), rs.getBoolean("done"))) : Optional.empty();
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to find todo with title: " + title, e);
+        }
+    }
 
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    public List<ToDo> findAll() {
+        String sql = SELECT_ALL;
+        List<ToDo> result = new ArrayList<>();
+        try (Connection c = dataSource.getConnection();
+                PreparedStatement ps = c.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(new ToDo(rs.getString("title"), rs.getBoolean("done")));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to retrieve all todos", e);
+        }
+    }
 
-	@Override
-	public List<ToDo> findAll() {
-		String sql = SELECT_ALL;
-		List<ToDo> result = new ArrayList<>();
-		try (Connection c = dataSource.getConnection();
-				PreparedStatement ps = c.prepareStatement(sql);
-				ResultSet rs = ps.executeQuery()) {
-			while (rs.next()) {
-				result.add(new ToDo(rs.getString("title"), rs.getBoolean("done")));
-			}
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-		return result;
-	}
+    @Override
+    public void deleteByTitle(String title) {
+        String sql = DELETE;
+        try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, title);
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows == 0) {
+                throw new EntityNotFoundException("Todo with title '" + title + "' not found for deletion");
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to delete todo with title: " + title, e);
+        }
+    }
 
-	@Override
-	public void deleteByTitle(String title) {
-		String sql = DELETE;
-		try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-			ps.setString(1, title);
-			ps.executeUpdate();
-
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
+    // Optional: Add an update method if needed
+    public void update(ToDo todo) {
+        String sql = UPDATE;
+        try (Connection c = dataSource.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setBoolean(1, todo.isDone());
+            ps.setString(2, todo.getTitle());
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows == 0) {
+                throw new EntityNotFoundException("Todo with title '" + todo.getTitle() + "' not found for update");
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to update todo with title: " + todo.getTitle(), e);
+        }
+    }
 }

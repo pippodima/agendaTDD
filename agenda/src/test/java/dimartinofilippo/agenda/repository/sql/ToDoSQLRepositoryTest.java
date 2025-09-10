@@ -98,7 +98,6 @@ class ToDoSQLRepositoryTest {
 
 		assertThat(result).isPresent().contains(new ToDo("task2", true));
 		verify(preparedStatement).setString(1, "task2");
-
 	}
 
 	@Test
@@ -117,7 +116,7 @@ class ToDoSQLRepositoryTest {
 	@Test
 	void testDeleteByTitle_removesRow() throws Exception {
 		when(connection.prepareStatement(ToDoSQLRepository.DELETE)).thenReturn(preparedStatement);
-
+		when(preparedStatement.executeUpdate()).thenReturn(1);
 		sqlRepository.deleteByTitle("task1");
 
 		verify(preparedStatement).setString(1, "task1");
@@ -125,39 +124,67 @@ class ToDoSQLRepositoryTest {
 	}
 
 	@Test
-	void testSave_whenSQLException_thenWrapsInRuntimeException() throws Exception {
+	void testSave_whenSQLException_thenWrapsInDataAccessException() throws Exception {
 		when(connection.prepareStatement(anyString())).thenThrow(new SQLException("boom"));
 
 		ToDo todo = new ToDo("x", true);
 
-		assertThatThrownBy(() -> sqlRepository.save(todo)).isInstanceOf(RuntimeException.class)
+		assertThatThrownBy(() -> sqlRepository.save(todo))
+				.isInstanceOf(ToDoSQLRepository.DataAccessException.class)
+				.hasMessageContaining("Failed to save todo with title: x")
 				.hasCauseInstanceOf(SQLException.class);
 	}
 
 	@Test
-	void testFindByTitle_whenSQLException_thenWrapsInRuntimeException() throws Exception {
+	void testFindByTitle_whenSQLException_thenWrapsInDataAccessException() throws Exception {
 		when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
 		when(preparedStatement.executeQuery()).thenThrow(new SQLException("fail"));
 
-		assertThatThrownBy(() -> sqlRepository.findByTitle("test")).isInstanceOf(RuntimeException.class)
+		assertThatThrownBy(() -> sqlRepository.findByTitle("test"))
+				.isInstanceOf(ToDoSQLRepository.DataAccessException.class)
+				.hasMessageContaining("Failed to find todo with title: test")
 				.hasCauseInstanceOf(SQLException.class);
 	}
 
 	@Test
-	void testFindAll_whenSQLException_thenWrapsInRuntimeException() throws Exception {
+	void testFindAll_whenSQLException_thenWrapsInDataAccessException() throws Exception {
 		when(connection.prepareStatement(anyString())).thenThrow(new SQLException("nope"));
 
-		assertThatThrownBy(() -> sqlRepository.findAll()).isInstanceOf(RuntimeException.class)
+		assertThatThrownBy(() -> sqlRepository.findAll())
+				.isInstanceOf(ToDoSQLRepository.DataAccessException.class)
+				.hasMessageContaining("Failed to retrieve all todos")
 				.hasCauseInstanceOf(SQLException.class);
 	}
 
 	@Test
-	void testDeleteByTitle_whenSQLException_thenWrapsInRuntimeException() throws Exception {
+	void testDeleteByTitle_whenSQLException_thenWrapsInDataAccessException() throws Exception {
 		when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
 		doThrow(new SQLException("bad delete")).when(preparedStatement).executeUpdate();
 
-		assertThatThrownBy(() -> sqlRepository.deleteByTitle("test")).isInstanceOf(RuntimeException.class)
+		assertThatThrownBy(() -> sqlRepository.deleteByTitle("test"))
+				.isInstanceOf(ToDoSQLRepository.DataAccessException.class)
+				.hasMessageContaining("Failed to delete todo with title: test")
 				.hasCauseInstanceOf(SQLException.class);
 	}
 
+	@Test
+	void testDeleteByTitle_whenEntityNotFound_thenThrowsEntityNotFoundException() throws Exception {
+		when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
+		when(preparedStatement.executeUpdate()).thenReturn(0); // No rows affected
+
+		assertThatThrownBy(() -> sqlRepository.deleteByTitle("nonexistent"))
+				.isInstanceOf(ToDoSQLRepository.EntityNotFoundException.class)
+				.hasMessageContaining("Todo with title 'nonexistent' not found for deletion");
+	}
+
+	@Test
+	void testUpdate_whenEntityNotFound_thenThrowsEntityNotFoundException() throws Exception {
+		ToDo todo = new ToDo("nonexistent", true);
+		when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
+		when(preparedStatement.executeUpdate()).thenReturn(0); // No rows affected
+
+		assertThatThrownBy(() -> sqlRepository.update(todo))
+				.isInstanceOf(ToDoSQLRepository.EntityNotFoundException.class)
+				.hasMessageContaining("Todo with title 'nonexistent' not found for update");
+	}
 }
