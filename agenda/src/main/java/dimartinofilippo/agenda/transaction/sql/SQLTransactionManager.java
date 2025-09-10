@@ -60,7 +60,7 @@ public class SQLTransactionManager implements TransactionManager {
                 getConnection().setAutoCommit(originalAutoCommit);
             }
         } catch (SQLException e) {
-            logger.warn("Warning: Failed to restore auto-commit state: " + e.getMessage());
+            logger.warn("Warning: Failed to restore auto-commit state: {}", e.getMessage());
         }
     }
 

@@ -25,6 +25,9 @@ import org.assertj.swing.core.matcher.JLabelMatcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -258,24 +261,16 @@ class ToDoSwingViewTest {
 		verify(btnAdd).setEnabled(true);
 	}
 
-	@Test
-	void testIsTitleValid_ShouldReturnFalseForNull() {
-		assertThat(todoSwingView.isTitleValid(null)).isFalse();
-	}
-
-	@Test
-	void testIsTitleValid_ShouldReturnFalseForEmpty() {
-		assertThat(todoSwingView.isTitleValid("")).isFalse();
-	}
-
-	@Test
-	void testIsTitleValid_ShouldReturnFalseForWhitespace() {
-		assertThat(todoSwingView.isTitleValid("   ")).isFalse();
-	}
+	@ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    void testIsTitleValid_ShouldReturnFalseForInvalidTitles(String invalidTitle) {
+        assertThat(todoSwingView.isTitleValid(invalidTitle)).isFalse();
+    }
 
 	@Test
 	void testIsTitleValid_ShouldReturnTrueForNonEmpty() {
-		assertThat(todoSwingView.isTitleValid("Meeting")).isTrue();
+		assertThat(todoSwingView.isTitleValid("Test")).isTrue();
 	}
 
 }
