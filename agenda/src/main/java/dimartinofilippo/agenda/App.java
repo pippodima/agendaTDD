@@ -155,13 +155,13 @@ public class App {
     }
 
     private static void handleStartupError(Exception e) {
-        System.err.println("Failed to start application: " + e.getMessage());
+        logger.error("Failed to start application: " + e.getMessage());
         e.printStackTrace();
         System.exit(1);
     }
 
     private static void handleGuiInitializationError(Exception e) {
-        System.err.println("Failed to initialize GUI: " + e.getMessage());
+    	logger.error("Failed to initialize GUI: " + e.getMessage());
         e.printStackTrace();
         System.exit(1);
     }
@@ -175,7 +175,7 @@ public class App {
 
             if (!rs.next()) {
                 stmt.executeUpdate("CREATE DATABASE " + dbName);
-                System.out.println("Database '" + dbName + "' created.");
+                logger.info("Database '" + dbName + "' created.");
             }
         }
     }
