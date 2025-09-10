@@ -9,6 +9,9 @@ import javax.sql.DataSource;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 import dimartinofilippo.agenda.controller.AgendaController;
 import dimartinofilippo.agenda.repository.ToDoRepository;
@@ -20,6 +23,9 @@ import dimartinofilippo.agenda.transaction.sql.SQLTransactionManager;
 import dimartinofilippo.agenda.view.swing.ToDoSwingView;
 
 public class App {
+	
+    private static final Logger logger = LoggerFactory.getLogger(App.class);
+
 
     public static void main(String[] args) {
         String dbType = args.length > 0 ? args[0].toLowerCase() : "sql"; // default to SQL/PostgreSQL
@@ -54,7 +60,7 @@ public class App {
         ToDoRepository todoRepository = new ToDoMongoRepository(mongoClient);
         TransactionManager transactionManager = new MongoTransactionManager(todoRepository);
         
-        System.out.println("Using MongoDB: " + mongoUri);
+        logger.info("Using MongoDB: " + mongoUri);
         return new MongoSetup(todoRepository, transactionManager);
     }
 
@@ -74,7 +80,7 @@ public class App {
         Connection transactionConnection = dataSource.getConnection();
         TransactionManager transactionManager = new SQLTransactionManager(todoRepository, transactionConnection);
 
-        System.out.println("Using PostgreSQL database: " + jdbcUrl);
+        logger.info("Using PostgreSQL database: " + jdbcUrl);
         return new SqlSetup(todoRepository, transactionManager);
     }
 
