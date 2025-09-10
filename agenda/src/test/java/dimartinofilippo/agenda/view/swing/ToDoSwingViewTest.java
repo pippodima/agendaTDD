@@ -12,6 +12,7 @@ import java.awt.EventQueue;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -26,6 +27,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
@@ -216,8 +219,9 @@ class ToDoSwingViewTest {
 		EventQueue.invokeAndWait(() -> ToDoSwingView.main(new String[] {}));
 	}
 
-	@Test
-	void testButtonEnableLogic_ShouldDisableWhenEmpty() {
+	@ParameterizedTest
+	@MethodSource("provideButtonEnableTestCases")
+	void testButtonEnableLogic_WithVariousInputs(String inputText, boolean expectedEnabled) {
 		KeyAdapter btnAddEnabler = new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
@@ -225,48 +229,28 @@ class ToDoSwingViewTest {
 			}
 		};
 
-		when(txtTitle.getText()).thenReturn("");
+		when(txtTitle.getText()).thenReturn(inputText);
 		btnAddEnabler.keyReleased(mockKeyEvent);
-
-		verify(btnAdd).setEnabled(false);
+		verify(btnAdd).setEnabled(expectedEnabled);
 	}
 
-	@Test
-	void testButtonEnableLogic_ShouldDisableWhenWhitespaceOnly() {
-		KeyAdapter btnAddEnabler = new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				btnAdd.setEnabled(!txtTitle.getText().trim().isEmpty());
-			}
-		};
-
-		when(txtTitle.getText()).thenReturn("   ");
-		btnAddEnabler.keyReleased(mockKeyEvent);
-
-		verify(btnAdd).setEnabled(false);
-	}
-
-	@Test
-	void testButtonEnableLogic_ShouldEnableWhenNonEmpty() {
-		KeyAdapter btnAddEnabler = new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				btnAdd.setEnabled(!txtTitle.getText().trim().isEmpty());
-			}
-		};
-
-		when(txtTitle.getText()).thenReturn("Meeting");
-		btnAddEnabler.keyReleased(mockKeyEvent);
-
-		verify(btnAdd).setEnabled(true);
+	private static Stream<Arguments> provideButtonEnableTestCases() {
+		return Stream.of(Arguments.of("", false), // Empty string should disable
+				Arguments.of("   ", false), // Whitespace only should disable
+				Arguments.of("Meeting", true), // Non-empty should enable
+				Arguments.of("Task 1", true), // Non-empty with numbers should enable
+				Arguments.of("A", true), // Single character should enable
+				Arguments.of("\t\n", false), // Tab and newline whitespace should disable
+				Arguments.of("  hello  ", true) // Text with surrounding spaces should enable
+		);
 	}
 
 	@ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = {"   "})
-    void testIsTitleValid_ShouldReturnFalseForInvalidTitles(String invalidTitle) {
-        assertThat(todoSwingView.isTitleValid(invalidTitle)).isFalse();
-    }
+	@NullAndEmptySource
+	@ValueSource(strings = { "   " })
+	void testIsTitleValid_ShouldReturnFalseForInvalidTitles(String invalidTitle) {
+		assertThat(todoSwingView.isTitleValid(invalidTitle)).isFalse();
+	}
 
 	@Test
 	void testIsTitleValid_ShouldReturnTrueForNonEmpty() {
