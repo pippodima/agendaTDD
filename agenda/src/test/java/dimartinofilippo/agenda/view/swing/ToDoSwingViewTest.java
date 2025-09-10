@@ -214,8 +214,7 @@ class ToDoSwingViewTest {
 	}
 
 	@Test
-	void testButtonEnableLogic_CoversBothBranches() {
-		// Create the KeyAdapter
+	void testButtonEnableLogic_ShouldDisableWhenEmpty() {
 		KeyAdapter btnAddEnabler = new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
@@ -223,15 +222,60 @@ class ToDoSwingViewTest {
 			}
 		};
 
-		// BRANCH 1: Test FALSE outcome (button disabled)
-		when(txtTitle.getText()).thenReturn(""); // Empty string
+		when(txtTitle.getText()).thenReturn("");
 		btnAddEnabler.keyReleased(mockKeyEvent);
-		verify(btnAdd).setEnabled(false); // Verify false branch
 
-		// BRANCH 2: Test TRUE outcome (button enabled)
-		when(txtTitle.getText()).thenReturn("Meeting"); // Non-empty string
+		verify(btnAdd).setEnabled(false);
+	}
+
+	@Test
+	void testButtonEnableLogic_ShouldDisableWhenWhitespaceOnly() {
+		KeyAdapter btnAddEnabler = new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				btnAdd.setEnabled(!txtTitle.getText().trim().isEmpty());
+			}
+		};
+
+		when(txtTitle.getText()).thenReturn("   ");
 		btnAddEnabler.keyReleased(mockKeyEvent);
-		verify(btnAdd).setEnabled(true); // Verify true branch
+
+		verify(btnAdd).setEnabled(false);
+	}
+
+	@Test
+	void testButtonEnableLogic_ShouldEnableWhenNonEmpty() {
+		KeyAdapter btnAddEnabler = new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				btnAdd.setEnabled(!txtTitle.getText().trim().isEmpty());
+			}
+		};
+
+		when(txtTitle.getText()).thenReturn("Meeting");
+		btnAddEnabler.keyReleased(mockKeyEvent);
+
+		verify(btnAdd).setEnabled(true);
+	}
+
+	@Test
+	void testIsTitleValid_ShouldReturnFalseForNull() {
+		assertThat(todoSwingView.isTitleValid(null)).isFalse();
+	}
+
+	@Test
+	void testIsTitleValid_ShouldReturnFalseForEmpty() {
+		assertThat(todoSwingView.isTitleValid("")).isFalse();
+	}
+
+	@Test
+	void testIsTitleValid_ShouldReturnFalseForWhitespace() {
+		assertThat(todoSwingView.isTitleValid("   ")).isFalse();
+	}
+
+	@Test
+	void testIsTitleValid_ShouldReturnTrueForNonEmpty() {
+		assertThat(todoSwingView.isTitleValid("Meeting")).isTrue();
 	}
 
 }

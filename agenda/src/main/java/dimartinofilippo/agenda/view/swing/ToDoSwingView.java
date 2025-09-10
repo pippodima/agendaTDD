@@ -89,7 +89,7 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 		KeyAdapter btnAddEnabler = new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
-				btnAdd.setEnabled(!txtTitle.getText().trim().isEmpty());
+				btnAdd.setEnabled(isTitleValid(txtTitle.getText()));
 			}
 		};
 		txtTitle.addKeyListener(btnAddEnabler);
@@ -130,8 +130,7 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 		listTodos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		listTodos.setName("todoList");
 
-		listTodos.addListSelectionListener(e -> 
-	    btnDeleteSelected.setEnabled(!listTodos.isSelectionEmpty()));
+		listTodos.addListSelectionListener(e -> btnDeleteSelected.setEnabled(!listTodos.isSelectionEmpty()));
 
 		scrollPane = new JScrollPane(listTodos);
 		GridBagConstraints gbcScrollPane = new GridBagConstraints();
@@ -200,5 +199,12 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 	public void setAgendaController(AgendaController agendaController) {
 		this.agendaController = agendaController;
 	}
+
+	// helper
+
+	boolean isTitleValid(String text) {
+	    return text != null && !text.trim().isEmpty();
+	}
+
 
 }
