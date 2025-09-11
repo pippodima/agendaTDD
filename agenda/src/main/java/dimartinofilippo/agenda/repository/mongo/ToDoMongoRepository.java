@@ -13,29 +13,24 @@ import com.mongodb.client.model.Filters;
 import dimartinofilippo.agenda.model.ToDo;
 import dimartinofilippo.agenda.repository.ToDoRepository;
 
-public class ToDoMongoRepository implements ToDoRepository{
-	
+public class ToDoMongoRepository implements ToDoRepository {
+
 	public static final String TODO_COLLECTION_NAME = "todos";
 	public static final String AGENDA_DB_NAME = "agenda";
-    public static final String TITLE = "title";
+	public static final String TITLE = "title";
 
-    private final MongoCollection<Document> todoCollection;
-    
-    public ToDoMongoRepository(MongoClient client) {
-    	
-    	todoCollection = client
-    			.getDatabase(AGENDA_DB_NAME)
-    			.getCollection(TODO_COLLECTION_NAME);
-    }
-    
+	private final MongoCollection<Document> todoCollection;
+
+	public ToDoMongoRepository(MongoClient client) {
+
+		todoCollection = client.getDatabase(AGENDA_DB_NAME).getCollection(TODO_COLLECTION_NAME);
+	}
 
 	@Override
 	public ToDo save(ToDo todo) {
-	    Document doc = new Document()
-	            .append(TITLE, todo.getTitle())
-	            .append("done", todo.isDone());
-	        todoCollection.insertOne(doc);
-	        return todo;
+		Document doc = new Document().append(TITLE, todo.getTitle()).append("done", todo.isDone());
+		todoCollection.insertOne(doc);
+		return todo;
 	}
 
 	@Override
@@ -48,24 +43,18 @@ public class ToDoMongoRepository implements ToDoRepository{
 	}
 
 	private ToDo fromDocumentToToDo(Document doc) {
-	    return new ToDo(
-	            doc.getString(TITLE),
-	            doc.getBoolean("done", false)
-	        );
+		return new ToDo(doc.getString(TITLE), doc.getBoolean("done", false));
 	}
-
 
 	@Override
 	public List<ToDo> findAll() {
-	    return StreamSupport.stream(todoCollection.find().spliterator(), false)
-	                        .map(this::fromDocumentToToDo)
-	                        .toList();
+		return StreamSupport.stream(todoCollection.find().spliterator(), false).map(this::fromDocumentToToDo).toList();
 	}
 
 	@Override
 	public void deleteByTitle(String title) {
 		todoCollection.deleteOne(Filters.eq(TITLE, title));
-		
+
 	}
 
 }

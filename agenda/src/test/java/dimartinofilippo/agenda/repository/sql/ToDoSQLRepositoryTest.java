@@ -129,10 +129,8 @@ class ToDoSQLRepositoryTest {
 
 		ToDo todo = new ToDo("x", true);
 
-		assertThatThrownBy(() -> sqlRepository.save(todo))
-				.isInstanceOf(ToDoSQLRepository.DataAccessException.class)
-				.hasMessageContaining("Failed to save todo with title: x")
-				.hasCauseInstanceOf(SQLException.class);
+		assertThatThrownBy(() -> sqlRepository.save(todo)).isInstanceOf(ToDoSQLRepository.DataAccessException.class)
+				.hasMessageContaining("Failed to save todo with title: x").hasCauseInstanceOf(SQLException.class);
 	}
 
 	@Test
@@ -142,18 +140,15 @@ class ToDoSQLRepositoryTest {
 
 		assertThatThrownBy(() -> sqlRepository.findByTitle("test"))
 				.isInstanceOf(ToDoSQLRepository.DataAccessException.class)
-				.hasMessageContaining("Failed to find todo with title: test")
-				.hasCauseInstanceOf(SQLException.class);
+				.hasMessageContaining("Failed to find todo with title: test").hasCauseInstanceOf(SQLException.class);
 	}
 
 	@Test
 	void testFindAll_whenSQLException_thenWrapsInDataAccessException() throws Exception {
 		when(connection.prepareStatement(anyString())).thenThrow(new SQLException("nope"));
 
-		assertThatThrownBy(() -> sqlRepository.findAll())
-				.isInstanceOf(ToDoSQLRepository.DataAccessException.class)
-				.hasMessageContaining("Failed to retrieve all todos")
-				.hasCauseInstanceOf(SQLException.class);
+		assertThatThrownBy(() -> sqlRepository.findAll()).isInstanceOf(ToDoSQLRepository.DataAccessException.class)
+				.hasMessageContaining("Failed to retrieve all todos").hasCauseInstanceOf(SQLException.class);
 	}
 
 	@Test
@@ -163,8 +158,7 @@ class ToDoSQLRepositoryTest {
 
 		assertThatThrownBy(() -> sqlRepository.deleteByTitle("test"))
 				.isInstanceOf(ToDoSQLRepository.DataAccessException.class)
-				.hasMessageContaining("Failed to delete todo with title: test")
-				.hasCauseInstanceOf(SQLException.class);
+				.hasMessageContaining("Failed to delete todo with title: test").hasCauseInstanceOf(SQLException.class);
 	}
 
 	@Test

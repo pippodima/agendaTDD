@@ -13,12 +13,13 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.release>17</maven.compiler.release>
 
+		<!-- Dependency Versions -->
 		<mockito.version>5.7.0</mockito.version>
 		<mongo.version>4.11.1</mongo.version>
 		<mongo.java.server.version>1.44.0</mongo.java.server.version>
 		<assertj.version>3.24.2</assertj.version>
-		<testcontainers.version>1.19.3</testcontainers.version>
 		<assertj.swing.version>3.17.1</assertj.swing.version>
+		<testcontainers.version>1.19.3</testcontainers.version>
 		<surefire.version>3.2.5</surefire.version>
 		<failsafe.version>3.2.5</failsafe.version>
 		<picocli.version>4.7.7</picocli.version>
@@ -28,29 +29,27 @@
 		<pitest.version>1.15.0</pitest.version>
 		<pitest.junit5.version>1.2.1</pitest.junit5.version>
 
+		<!-- Sonar Properties -->
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 		<sonar.projectKey>pippodima_agendaTDD</sonar.projectKey>
 		<sonar.organization>pippodima-1</sonar.organization>
 		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
 		<sonar.coverage.jacoco.xmlReportPaths>
 			target/site/jacoco-aggregate/jacoco.xml
-</sonar.coverage.jacoco.xmlReportPaths>
+		</sonar.coverage.jacoco.xmlReportPaths>
 		<sonar.coverage.exclusions>
 			src/main/java/dimartinofilippo/agenda/model/**,
 			src/main/java/dimartinofilippo/agenda/App*.java
-</sonar.coverage.exclusions>
-
-		<!-- Disable rule for "Tests should include assertions" -->
+		</sonar.coverage.exclusions>
 		<sonar.issue.ignore.multicriteria>e1</sonar.issue.ignore.multicriteria>
 		<sonar.issue.ignore.multicriteria.e1.ruleKey>java:S2699</sonar.issue.ignore.multicriteria.e1.ruleKey>
 		<sonar.issue.ignore.multicriteria.e1.resourceKey>**/*Test.java</sonar.issue.ignore.multicriteria.e1.resourceKey>
 
-
 		<jacocoArgLine></jacocoArgLine>
 		<jacocoArgLineIT></jacocoArgLineIT>
-
 	</properties>
 
+	<!-- Dependency Management -->
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -63,6 +62,7 @@
 		</dependencies>
 	</dependencyManagement>
 
+	<!-- Dependencies -->
 	<dependencies>
 		<!-- JUnit 5 -->
 		<dependency>
@@ -81,7 +81,6 @@
 			<scope>test</scope>
 		</dependency>
 
-
 		<!-- Mockito -->
 		<dependency>
 			<groupId>org.mockito</groupId>
@@ -89,7 +88,6 @@
 			<version>${mockito.version}</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-junit-jupiter</artifactId>
@@ -97,15 +95,12 @@
 			<scope>test</scope>
 		</dependency>
 
-
-		<!-- MongoDB Driver -->
+		<!-- MongoDB -->
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongodb-driver-sync</artifactId>
 			<version>${mongo.version}</version>
 		</dependency>
-
-		<!-- In-memory MongoDB for testing -->
 		<dependency>
 			<groupId>de.bwaldvogel</groupId>
 			<artifactId>mongo-java-server</artifactId>
@@ -120,8 +115,6 @@
 			<version>${assertj.version}</version>
 			<scope>test</scope>
 		</dependency>
-
-		<!-- AssertJ Swing -->
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-swing-junit</artifactId>
@@ -129,12 +122,17 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- H2 Database for tests -->
+		<!-- Databases -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<version>${h2.version}</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>${postgresql.version}</version>
 		</dependency>
 
 		<!-- TestContainers -->
@@ -163,13 +161,6 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- PostgreSQL JDBC -->
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>${postgresql.version}</version>
-		</dependency>
-
 		<!-- Picocli -->
 		<dependency>
 			<groupId>info.picocli</groupId>
@@ -177,7 +168,7 @@
 			<version>${picocli.version}</version>
 		</dependency>
 
-		<!-- logger binder-->
+		<!-- Logging -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
@@ -192,7 +183,8 @@
 
 	<build>
 		<plugins>
-			<!-- Maven Compiler Plugin -->
+
+			<!-- Compiler -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -202,8 +194,7 @@
 				</configuration>
 			</plugin>
 
-
-			<!-- jacoco -->
+			<!-- JaCoCo -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
@@ -215,15 +206,12 @@
 					</excludes>
 				</configuration>
 				<executions>
-					<!-- Unit Test Agent -->
 					<execution>
 						<id>prepare-agent</id>
 						<goals>
 							<goal>prepare-agent</goal>
 						</goals>
 					</execution>
-
-					<!-- Unit Test Report -->
 					<execution>
 						<id>report</id>
 						<phase>test</phase>
@@ -231,7 +219,6 @@
 							<goal>report</goal>
 						</goals>
 					</execution>
-
 				</executions>
 			</plugin>
 
@@ -258,12 +245,10 @@
 						<param>dimartinofilippo.agenda.view.swing.*</param>
 						<param>dimartinofilippo.agenda.model.*</param>
 						<param>dimartinofilippo.agenda.App*</param>
-
 					</excludedClasses>
 					<mutators>
 						<mutator>STRONGER</mutator>
 					</mutators>
-
 					<timeoutFactor>2</timeoutFactor>
 					<timeoutConstant>8000</timeoutConstant>
 					<outputFormats>
@@ -283,7 +268,7 @@
 				</executions>
 			</plugin>
 
-			<!-- Maven Surefire Plugin -->
+			<!-- Surefire for Unit Tests -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -302,7 +287,7 @@
 				</configuration>
 			</plugin>
 
-			<!-- Maven Failsafe Plugin -->
+			<!-- Failsafe for Integration/E2E Tests -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
@@ -340,7 +325,7 @@
 				</executions>
 			</plugin>
 
-			<!-- Build Helper Maven Plugin - Add custom source directories -->
+			<!-- Build Helper -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
@@ -373,6 +358,7 @@
 				</executions>
 			</plugin>
 
+			<!-- Maven Shade -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -397,12 +383,7 @@
 								<filter>
 									<artifact>*:*</artifact>
 									<excludes>
-										<exclude>META-INF/*.SF</exclude>
-										<exclude>META-INF/*.DSA</exclude>
-										<exclude>META-INF/*.RSA</exclude>
-										<exclude>META-INF/MANIFEST.MF</exclude>
-										<exclude>META-INF/maven/**</exclude>
-										<exclude>META-INF/native-image/**</exclude>
+										<exclude>META-INF/**</exclude>
 									</excludes>
 								</filter>
 							</filters>
@@ -410,7 +391,8 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- Coverall -->
+
+			<!-- Coveralls -->
 			<plugin>
 				<groupId>com.github.hazendaz.maven</groupId>
 				<artifactId>coveralls-maven-plugin</artifactId>
@@ -419,9 +401,11 @@
 					<repoToken>${env.COVERALLS_REPO_TOKEN}</repoToken>
 				</configuration>
 			</plugin>
+
 		</plugins>
 	</build>
 
+	<!-- Profiles -->
 	<profiles>
 		<profile>
 			<id>skip-testcontainers</id>
@@ -436,8 +420,6 @@
 							</excludes>
 						</configuration>
 					</plugin>
-
-					<!-- sonar qube -->
 					<plugin>
 						<groupId>org.sonarsource.scanner.maven</groupId>
 						<artifactId>sonar-maven-plugin</artifactId>

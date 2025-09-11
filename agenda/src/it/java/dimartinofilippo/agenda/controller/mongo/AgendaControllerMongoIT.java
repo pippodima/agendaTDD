@@ -46,7 +46,6 @@ public class AgendaControllerMongoIT {
 
 		todoRepository = new ToDoMongoRepository(mongoClient);
 
-		// Clear existing data
 		for (ToDo todo : todoRepository.findAll()) {
 			todoRepository.deleteByTitle(todo.getTitle());
 		}

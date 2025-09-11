@@ -13,31 +13,33 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MongoTransactionManagerTest {
 
-    @Mock
-    private ToDoRepository repository;
+	@Mock
+	private ToDoRepository repository;
 
-    private MongoTransactionManager txManager;
+	private MongoTransactionManager txManager;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        txManager = new MongoTransactionManager(repository);
-    }
+	@BeforeEach
+	void setUp() {
+		MockitoAnnotations.openMocks(this);
+		txManager = new MongoTransactionManager(repository);
+	}
 
-    @Test
-    void doInTransaction_shouldReturnResultFromCode() {
-        TransactionCode<String> code = repo -> "success";
+	@Test
+	void doInTransaction_shouldReturnResultFromCode() {
+		TransactionCode<String> code = repo -> "success";
 
-        String result = txManager.doInTransaction(code);
+		String result = txManager.doInTransaction(code);
 
-        assertThat(result).isEqualTo("success");
-    }
+		assertThat(result).isEqualTo("success");
+	}
 
-    @Test
-    void doInTransaction_shouldPropagateRuntimeException() {
-        TransactionCode<Void> code = repo -> { throw new RuntimeException("fail"); };
+	@Test
+	void doInTransaction_shouldPropagateRuntimeException() {
+		TransactionCode<Void> code = repo -> {
+			throw new RuntimeException("fail");
+		};
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> txManager.doInTransaction(code));
-        assertThat(ex.getMessage()).isEqualTo("fail");
-    }
+		RuntimeException ex = assertThrows(RuntimeException.class, () -> txManager.doInTransaction(code));
+		assertThat(ex.getMessage()).isEqualTo("fail");
+	}
 }

@@ -215,7 +215,6 @@ class ToDoSwingViewTest {
 
 	@Test
 	void main_shouldRunWithoutException() throws Exception {
-		// call main in the EventQueue to mimic real launch
 		EventQueue.invokeAndWait(() -> ToDoSwingView.main(new String[] {}));
 	}
 

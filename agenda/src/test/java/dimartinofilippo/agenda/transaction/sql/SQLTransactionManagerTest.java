@@ -88,7 +88,7 @@ class SQLTransactionManagerTest {
 
 		TransactionException ex = assertThrows(SQLTransactionManager.TransactionException.class,
 				() -> txManager.doInTransaction(repo -> {
-					throw new RuntimeException("boom"); // business logic fails
+					throw new RuntimeException("boom");
 				}));
 
 		assertEquals("Transaction failed due to runtime exception", ex.getMessage());
@@ -117,9 +117,7 @@ class SQLTransactionManagerTest {
 	void testRollbackException() throws SQLException {
 		when(mockConnection.getAutoCommit()).thenReturn(true);
 
-		// Simulate failure: commit throws SQLException
 		doThrow(new SQLException("commit failed")).when(mockConnection).commit();
-		// Simulate rollback ALSO fails
 		doThrow(new SQLException("rollback failed")).when(mockConnection).rollback();
 
 		TransactionRollbackException ex = assertThrows(SQLTransactionManager.TransactionRollbackException.class,
@@ -143,8 +141,8 @@ class SQLTransactionManagerTest {
 		method.setAccessible(true);
 		method.invoke(txManager, true);
 
-		boolean found = testAppender.events.stream().anyMatch(event -> event.getLevel() == Level.WARN
-				&& event.getFormattedMessage().contains("Warning: Failed to restore auto-commit state: cannot restore"));
+		boolean found = testAppender.events.stream().anyMatch(event -> event.getLevel() == Level.WARN && event
+				.getFormattedMessage().contains("Warning: Failed to restore auto-commit state: cannot restore"));
 
 		assertTrue(found, "Expected warning log not found");
 	}
@@ -155,13 +153,11 @@ class SQLTransactionManagerTest {
 
 		txManager = new SQLTransactionManager(mockRepo, mockConnection);
 
-		// Use reflection to call private rollbackTransaction()
 		var method = SQLTransactionManager.class.getDeclaredMethod("rollbackTransaction");
 		method.setAccessible(true);
 
 		method.invoke(txManager);
 
-		// rollback() should not be called because connection is closed
 		verify(mockConnection, never()).rollback();
 	}
 
@@ -176,7 +172,6 @@ class SQLTransactionManagerTest {
 
 		method.invoke(txManager, true);
 
-		// setAutoCommit() should not be called
 		verify(mockConnection, never()).setAutoCommit(anyBoolean());
 	}
 

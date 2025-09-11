@@ -22,209 +22,209 @@ import dimartinofilippo.agenda.transaction.sql.SQLTransactionManager;
 import dimartinofilippo.agenda.view.swing.ToDoSwingView;
 
 public class App {
-    private static final Logger logger = LoggerFactory.getLogger(App.class);
+	private static final Logger logger = LoggerFactory.getLogger(App.class);
 
-    // Custom exception classes defined in the same file
-    public static class DatabaseSchemaException extends RuntimeException {
-        private static final long serialVersionUID = 1L;
+	// Custom exception classes defined in the same file
+	public static class DatabaseSchemaException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
 
 		public DatabaseSchemaException(String message) {
-            super(message);
-        }
+			super(message);
+		}
 
-        public DatabaseSchemaException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
+		public DatabaseSchemaException(String message, Throwable cause) {
+			super(message, cause);
+		}
+	}
 
-    public static class DatabaseInitializationException extends RuntimeException {
-        private static final long serialVersionUID = 2L;
+	public static class DatabaseInitializationException extends RuntimeException {
+		private static final long serialVersionUID = 2L;
 
 		public DatabaseInitializationException(String message) {
-            super(message);
-        }
+			super(message);
+		}
 
-        public DatabaseInitializationException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
+		public DatabaseInitializationException(String message, Throwable cause) {
+			super(message, cause);
+		}
+	}
 
-    public static void main(String[] args) {
-        String dbType = args.length > 0 ? args[0].toLowerCase() : "sql";
+	public static void main(String[] args) {
+		String dbType = args.length > 0 ? args[0].toLowerCase() : "sql";
 
-        try {
-            TransactionManager transactionManager;
+		try {
+			TransactionManager transactionManager;
 
-            if ("mongo".equals(dbType)) {
-                var mongoSetup = setupMongoDB(args);
-                transactionManager = mongoSetup.transactionManager();
-            } else {
-                var sqlSetup = setupPostgreSQL(args);
-                transactionManager = sqlSetup.transactionManager();
-            }
+			if ("mongo".equals(dbType)) {
+				var mongoSetup = setupMongoDB(args);
+				transactionManager = mongoSetup.transactionManager();
+			} else {
+				var sqlSetup = setupPostgreSQL(args);
+				transactionManager = sqlSetup.transactionManager();
+			}
 
-            initializeGUI(transactionManager);
+			initializeGUI(transactionManager);
 
-        } catch (Exception e) {
-            handleStartupError(e);
-        }
-    }
+		} catch (Exception e) {
+			handleStartupError(e);
+		}
+	}
 
-    private static MongoSetup setupMongoDB(String[] args) {
-        try {
-            String mongoHost = args.length > 1 ? args[1] : "localhost";
-            int mongoPort = args.length > 2 ? Integer.parseInt(args[2]) : 27017;
-            String mongoUri = "mongodb://" + mongoHost + ":" + mongoPort;
+	private static MongoSetup setupMongoDB(String[] args) {
+		try {
+			String mongoHost = args.length > 1 ? args[1] : "localhost";
+			int mongoPort = args.length > 2 ? Integer.parseInt(args[2]) : 27017;
+			String mongoUri = "mongodb://" + mongoHost + ":" + mongoPort;
 
-            MongoClient mongoClient = MongoClients.create(mongoUri);
-            ToDoRepository todoRepository = new ToDoMongoRepository(mongoClient);
-            TransactionManager transactionManager = new MongoTransactionManager(todoRepository);
-            
-            logger.info("Using MongoDB: {}", mongoUri);
-            return new MongoSetup(todoRepository, transactionManager);
-        } catch (Exception e) {
-            throw new DatabaseInitializationException("Failed to initialize MongoDB", e);
-        }
-    }
+			MongoClient mongoClient = MongoClients.create(mongoUri);
+			ToDoRepository todoRepository = new ToDoMongoRepository(mongoClient);
+			TransactionManager transactionManager = new MongoTransactionManager(todoRepository);
 
-    private static SqlSetup setupPostgreSQL(String[] args) {
-        try {
-            String jdbcUrl = args.length > 1 ? args[1] : "jdbc:postgresql://localhost:5432/agenda";
-            String username = args.length > 2 ? args[2] : "postgres";
-            String password = args.length > 3 ? args[3] : "password";
-            String databaseName = "agenda";
+			logger.info("Using MongoDB: {}", mongoUri);
+			return new MongoSetup(todoRepository, transactionManager);
+		} catch (Exception e) {
+			throw new DatabaseInitializationException("Failed to initialize MongoDB", e);
+		}
+	}
 
-            createDatabaseIfNotExists(jdbcUrl, username, password, databaseName);
+	private static SqlSetup setupPostgreSQL(String[] args) {
+		try {
+			String jdbcUrl = args.length > 1 ? args[1] : "jdbc:postgresql://localhost:5432/agenda";
+			String username = args.length > 2 ? args[2] : "postgres";
+			String password = args.length > 3 ? args[3] : "password";
+			String databaseName = "agenda";
 
-            DataSource dataSource = createDataSource(jdbcUrl, username, password);
-            initializeSqlSchema(dataSource);
+			createDatabaseIfNotExists(jdbcUrl, username, password, databaseName);
 
-            ToDoRepository todoRepository = new ToDoSQLRepository(dataSource);
-            Connection transactionConnection = dataSource.getConnection();
-            TransactionManager transactionManager = new SQLTransactionManager(todoRepository, transactionConnection);
+			DataSource dataSource = createDataSource(jdbcUrl, username, password);
+			initializeSqlSchema(dataSource);
 
-            logger.info("Using PostgreSQL database: {}", jdbcUrl);
-            return new SqlSetup(todoRepository, transactionManager);
-        } catch (Exception e) {
-            throw new DatabaseInitializationException("Failed to initialize PostgreSQL", e);
-        }
-    }
+			ToDoRepository todoRepository = new ToDoSQLRepository(dataSource);
+			Connection transactionConnection = dataSource.getConnection();
+			TransactionManager transactionManager = new SQLTransactionManager(todoRepository, transactionConnection);
 
-    private static DataSource createDataSource(String jdbcUrl, String username, String password) {
-        return new DataSource() {
-            @Override
-            public Connection getConnection() throws java.sql.SQLException {
-                return DriverManager.getConnection(jdbcUrl, username, password);
-            }
+			logger.info("Using PostgreSQL database: {}", jdbcUrl);
+			return new SqlSetup(todoRepository, transactionManager);
+		} catch (Exception e) {
+			throw new DatabaseInitializationException("Failed to initialize PostgreSQL", e);
+		}
+	}
 
-            @Override
-            public Connection getConnection(String user, String pass) throws java.sql.SQLException {
-                return DriverManager.getConnection(jdbcUrl, user, pass);
-            }
+	private static DataSource createDataSource(String jdbcUrl, String username, String password) {
+		return new DataSource() {
+			@Override
+			public Connection getConnection() throws java.sql.SQLException {
+				return DriverManager.getConnection(jdbcUrl, username, password);
+			}
 
-            @Override
-            public <T> T unwrap(Class<T> iface) {
-                throw new UnsupportedOperationException();
-            }
+			@Override
+			public Connection getConnection(String user, String pass) throws java.sql.SQLException {
+				return DriverManager.getConnection(jdbcUrl, user, pass);
+			}
 
-            @Override
-            public boolean isWrapperFor(Class<?> iface) {
-                return false;
-            }
+			@Override
+			public <T> T unwrap(Class<T> iface) {
+				throw new UnsupportedOperationException();
+			}
 
-            @Override
-            public java.io.PrintWriter getLogWriter() {
-                throw new UnsupportedOperationException();
-            }
+			@Override
+			public boolean isWrapperFor(Class<?> iface) {
+				return false;
+			}
 
-            @Override
-            public void setLogWriter(java.io.PrintWriter out) {
-                throw new UnsupportedOperationException();
-            }
+			@Override
+			public java.io.PrintWriter getLogWriter() {
+				throw new UnsupportedOperationException();
+			}
 
-            @Override
-            public void setLoginTimeout(int seconds) {
-                throw new UnsupportedOperationException();
-            }
+			@Override
+			public void setLogWriter(java.io.PrintWriter out) {
+				throw new UnsupportedOperationException();
+			}
 
-            @Override
-            public int getLoginTimeout() {
-                return 0;
-            }
+			@Override
+			public void setLoginTimeout(int seconds) {
+				throw new UnsupportedOperationException();
+			}
 
-            @Override
-            public java.util.logging.Logger getParentLogger() {
-                throw new UnsupportedOperationException();
-            }
-        };
-    }
+			@Override
+			public int getLoginTimeout() {
+				return 0;
+			}
 
-    private static void initializeSqlSchema(DataSource dataSource) {
-        try (Connection conn = dataSource.getConnection()) {
-            createSqlSchema(conn);
-        } catch (Exception e) {
-            throw new DatabaseSchemaException("Failed to initialize SQL schema", e);
-        }
-    }
+			@Override
+			public java.util.logging.Logger getParentLogger() {
+				throw new UnsupportedOperationException();
+			}
+		};
+	}
 
-    private static void createDatabaseIfNotExists(String jdbcUrl, String username, String password, String dbName) {
-        try {
-            String defaultUrl = jdbcUrl.replace("/" + dbName, "/postgres");
-            try (Connection conn = DriverManager.getConnection(defaultUrl, username, password);
-                    Statement stmt = conn.createStatement();
-                    ResultSet rs = stmt.executeQuery("SELECT 1 FROM pg_database WHERE datname = '" + dbName + "'")) {
+	private static void initializeSqlSchema(DataSource dataSource) {
+		try (Connection conn = dataSource.getConnection()) {
+			createSqlSchema(conn);
+		} catch (Exception e) {
+			throw new DatabaseSchemaException("Failed to initialize SQL schema", e);
+		}
+	}
 
-                if (!rs.next()) {
-                    stmt.executeUpdate("CREATE DATABASE " + dbName);
-                    logger.info("Database '{}' created.", dbName);
-                }
-            }
-        } catch (Exception e) {
-            throw new DatabaseInitializationException("Failed to create database '" + dbName + "'", e);
-        }
-    }
+	private static void createDatabaseIfNotExists(String jdbcUrl, String username, String password, String dbName) {
+		try {
+			String defaultUrl = jdbcUrl.replace("/" + dbName, "/postgres");
+			try (Connection conn = DriverManager.getConnection(defaultUrl, username, password);
+					Statement stmt = conn.createStatement();
+					ResultSet rs = stmt.executeQuery("SELECT 1 FROM pg_database WHERE datname = '" + dbName + "'")) {
 
-    private static void createSqlSchema(Connection connection) {
-        try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS todos (" + 
-                "id SERIAL PRIMARY KEY," +
-                "title VARCHAR(255) NOT NULL UNIQUE," + 
-                "done BOOLEAN NOT NULL" + 
-                ")");
-        } catch (Exception e) {
-            throw new DatabaseSchemaException("Failed to create SQL schema", e);
-        }
-    }
+				if (!rs.next()) {
+					stmt.executeUpdate("CREATE DATABASE " + dbName);
+					logger.info("Database '{}' created.", dbName);
+				}
+			}
+		} catch (Exception e) {
+			throw new DatabaseInitializationException("Failed to create database '" + dbName + "'", e);
+		}
+	}
 
-    private static void initializeGUI(TransactionManager transactionManager) {
-        EventQueue.invokeLater(() -> {
-            try {
-                ToDoSwingView todoView = new ToDoSwingView();
-                AgendaController agendaController = new AgendaController(transactionManager, todoView);
-                todoView.setAgendaController(agendaController);
-                todoView.setVisible(true);
+	private static void createSqlSchema(Connection connection) {
+		try (Statement statement = connection.createStatement()) {
+			statement.executeUpdate("CREATE TABLE IF NOT EXISTS todos (" + "id SERIAL PRIMARY KEY,"
+					+ "title VARCHAR(255) NOT NULL UNIQUE," + "done BOOLEAN NOT NULL" + ")");
+		} catch (Exception e) {
+			throw new DatabaseSchemaException("Failed to create SQL schema", e);
+		}
+	}
 
-                agendaController.allToDos();
-            } catch (Exception e) {
-                handleGuiInitializationError(e);
-            }
-        });
-    }
+	private static void initializeGUI(TransactionManager transactionManager) {
+		EventQueue.invokeLater(() -> {
+			try {
+				ToDoSwingView todoView = new ToDoSwingView();
+				AgendaController agendaController = new AgendaController(transactionManager, todoView);
+				todoView.setAgendaController(agendaController);
+				todoView.setVisible(true);
 
-    private static void handleStartupError(Exception e) {
-        if (e instanceof DatabaseSchemaException || e instanceof DatabaseInitializationException) {
-            logger.error("Database initialization failed: {}", e.getMessage(), e);
-        } else {
-            logger.error("Failed to start application", e);
-        }
-        System.exit(1);
-    }
+				agendaController.allToDos();
+			} catch (Exception e) {
+				handleGuiInitializationError(e);
+			}
+		});
+	}
 
-    private static void handleGuiInitializationError(Exception e) {
-        logger.error("Failed to initialize GUI", e);
-        System.exit(1);
-    }
+	private static void handleStartupError(Exception e) {
+		if (e instanceof DatabaseSchemaException || e instanceof DatabaseInitializationException) {
+			logger.error("Database initialization failed: {}", e.getMessage(), e);
+		} else {
+			logger.error("Failed to start application", e);
+		}
+		System.exit(1);
+	}
 
-    private record MongoSetup(ToDoRepository todoRepository, TransactionManager transactionManager) {}
-    private record SqlSetup(ToDoRepository todoRepository, TransactionManager transactionManager) {}
+	private static void handleGuiInitializationError(Exception e) {
+		logger.error("Failed to initialize GUI", e);
+		System.exit(1);
+	}
+
+	private record MongoSetup(ToDoRepository todoRepository, TransactionManager transactionManager) {
+	}
+
+	private record SqlSetup(ToDoRepository todoRepository, TransactionManager transactionManager) {
+	}
 }

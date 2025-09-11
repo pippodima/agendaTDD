@@ -28,113 +28,89 @@ import dimartinofilippo.agenda.model.ToDo;
 @ExtendWith(MockitoExtension.class)
 class ToDoMongoRepositoryTest {
 
-    @Mock
-    private MongoClient mockClient;
-    
-    @Mock
-    private MongoDatabase mockDatabase;
-    
-    @Mock
-    private MongoCollection<Document> mockCollection;
-    
-    @Mock
-    private FindIterable<Document> mockFindIterable;
-    
-    private ToDoMongoRepository todoRepository;
+	@Mock
+	private MongoClient mockClient;
 
-    @BeforeEach
-    void setup() {
-        when(mockClient.getDatabase(ToDoMongoRepository.AGENDA_DB_NAME))
-            .thenReturn(mockDatabase);
-        when(mockDatabase.getCollection(ToDoMongoRepository.TODO_COLLECTION_NAME))
-            .thenReturn(mockCollection);
-        
-        todoRepository = new ToDoMongoRepository(mockClient);
-    }
+	@Mock
+	private MongoDatabase mockDatabase;
 
-    @Test
-    void testFindAllWhenDBIsEmpty() {
-        // Arrange
-        when(mockCollection.find()).thenReturn(mockFindIterable);
-        when(mockFindIterable.spliterator()).thenReturn(Collections.<Document>emptyList().spliterator());
-        
-        // Act
-        List<ToDo> result = todoRepository.findAll();
-        
-        // Assert
-        assertThat(result).isEmpty();
-    }
+	@Mock
+	private MongoCollection<Document> mockCollection;
 
-    @Test
-    void testFindAllWhenDBIsNotEmpty() {
-        // Arrange
-        Document doc1 = new Document("title", "todo1").append("done", true);
-        Document doc2 = new Document("title", "todo2").append("done", false);
-        List<Document> documents = Arrays.asList(doc1, doc2);
-        
-        when(mockCollection.find()).thenReturn(mockFindIterable);
-        when(mockFindIterable.spliterator()).thenReturn(documents.spliterator());
-        
-        // Act
-        List<ToDo> result = todoRepository.findAll();
-        
-        // Assert
-        assertThat(result).containsExactly(
-            new ToDo("todo1", true),
-            new ToDo("todo2", false)
-        );
-    }
+	@Mock
+	private FindIterable<Document> mockFindIterable;
 
-    @Test
-    void testFindByTitleNotFound() {
-        // Arrange
-        when(mockCollection.find(any(Bson.class))).thenReturn(mockFindIterable);
-        when(mockFindIterable.first()).thenReturn(null);
+	private ToDoMongoRepository todoRepository;
 
-        // Act
-        Optional<ToDo> result = todoRepository.findByTitle("nonexistent");
+	@BeforeEach
+	void setup() {
+		when(mockClient.getDatabase(ToDoMongoRepository.AGENDA_DB_NAME)).thenReturn(mockDatabase);
+		when(mockDatabase.getCollection(ToDoMongoRepository.TODO_COLLECTION_NAME)).thenReturn(mockCollection);
 
-        // Assert
-        assertThat(result).isEmpty();
-    }
+		todoRepository = new ToDoMongoRepository(mockClient);
+	}
 
-    @Test
-    void testFindByTitleFound() {
-        // Arrange
-        Document doc = new Document("title", "task2").append("done", true);
-        
-        when(mockCollection.find(any(Bson.class))).thenReturn(mockFindIterable);
-        when(mockFindIterable.first()).thenReturn(doc);
-        
-        // Act
-        Optional<ToDo> result = todoRepository.findByTitle("task2");
-        
-        // Assert
-        assertThat(result)
-            .isPresent()
-            .contains(new ToDo("task2", true));
-    }
+	@Test
+	void testFindAllWhenDBIsEmpty() {
+		when(mockCollection.find()).thenReturn(mockFindIterable);
+		when(mockFindIterable.spliterator()).thenReturn(Collections.<Document>emptyList().spliterator());
 
-    @Test
-    void testSave() {
-        // Arrange
-        ToDo todo = new ToDo("task1", false);
-        Document expectedDocument = new Document("title", "task1").append("done", false);
-        
-        // Act
-        ToDo result = todoRepository.save(todo);
-        
-        // Assert
-        assertThat(result).isEqualTo(todo);
-        verify(mockCollection).insertOne(expectedDocument);
-    }
+		List<ToDo> result = todoRepository.findAll();
 
-    @Test
-    void testDelete() {
-        // Act
-        todoRepository.deleteByTitle("task1");
-        
-        // Assert
-        verify(mockCollection).deleteOne(any(Bson.class));
-    }
+		assertThat(result).isEmpty();
+	}
+
+	@Test
+	void testFindAllWhenDBIsNotEmpty() {
+		Document doc1 = new Document("title", "todo1").append("done", true);
+		Document doc2 = new Document("title", "todo2").append("done", false);
+		List<Document> documents = Arrays.asList(doc1, doc2);
+
+		when(mockCollection.find()).thenReturn(mockFindIterable);
+		when(mockFindIterable.spliterator()).thenReturn(documents.spliterator());
+
+		List<ToDo> result = todoRepository.findAll();
+
+		assertThat(result).containsExactly(new ToDo("todo1", true), new ToDo("todo2", false));
+	}
+
+	@Test
+	void testFindByTitleNotFound() {
+		when(mockCollection.find(any(Bson.class))).thenReturn(mockFindIterable);
+		when(mockFindIterable.first()).thenReturn(null);
+
+		Optional<ToDo> result = todoRepository.findByTitle("nonexistent");
+
+		assertThat(result).isEmpty();
+	}
+
+	@Test
+	void testFindByTitleFound() {
+		Document doc = new Document("title", "task2").append("done", true);
+
+		when(mockCollection.find(any(Bson.class))).thenReturn(mockFindIterable);
+		when(mockFindIterable.first()).thenReturn(doc);
+
+		Optional<ToDo> result = todoRepository.findByTitle("task2");
+
+		assertThat(result).isPresent().contains(new ToDo("task2", true));
+	}
+
+	@Test
+	void testSave() {
+		ToDo todo = new ToDo("task1", false);
+		Document expectedDocument = new Document("title", "task1").append("done", false);
+
+		ToDo result = todoRepository.save(todo);
+
+		assertThat(result).isEqualTo(todo);
+		verify(mockCollection).insertOne(expectedDocument);
+	}
+
+	@Test
+	void testDelete() {
+		todoRepository.deleteByTitle("task1");
+
+		verify(mockCollection).deleteOne(any(Bson.class));
+	}
 }

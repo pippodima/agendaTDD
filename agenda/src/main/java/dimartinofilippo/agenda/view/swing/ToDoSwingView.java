@@ -203,8 +203,7 @@ public class ToDoSwingView extends JFrame implements ToDoView {
 	// helper
 
 	boolean isTitleValid(String text) {
-	    return text != null && !text.trim().isEmpty();
+		return text != null && !text.trim().isEmpty();
 	}
-
 
 }
