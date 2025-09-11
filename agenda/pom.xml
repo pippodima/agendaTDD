@@ -22,7 +22,6 @@
 		<testcontainers.version>1.19.3</testcontainers.version>
 		<surefire.version>3.2.5</surefire.version>
 		<failsafe.version>3.2.5</failsafe.version>
-		<picocli.version>4.7.7</picocli.version>
 		<jacoco.version>0.8.12</jacoco.version>
 		<postgresql.version>42.7.4</postgresql.version>
 		<h2.version>2.2.224</h2.version>
@@ -159,13 +158,6 @@
 			<artifactId>postgresql</artifactId>
 			<version>${testcontainers.version}</version>
 			<scope>test</scope>
-		</dependency>
-
-		<!-- Picocli -->
-		<dependency>
-			<groupId>info.picocli</groupId>
-			<artifactId>picocli</artifactId>
-			<version>${picocli.version}</version>
 		</dependency>
 
 		<!-- Logging -->
