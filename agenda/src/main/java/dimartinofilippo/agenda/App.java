@@ -24,7 +24,6 @@ import dimartinofilippo.agenda.view.swing.ToDoSwingView;
 public class App {
 	private static final Logger logger = LoggerFactory.getLogger(App.class);
 
-	// Custom exception classes defined in the same file
 	public static class DatabaseSchemaException extends RuntimeException {
 		private static final long serialVersionUID = 1L;
 
@@ -50,7 +49,7 @@ public class App {
 	}
 
 	public static void main(String[] args) {
-		String dbType = args.length > 0 ? args[0].toLowerCase() : "sql";
+		String dbType = args.length > 0 ? args[0].toLowerCase() : "mongo";
 
 		try {
 			TransactionManager transactionManager;
